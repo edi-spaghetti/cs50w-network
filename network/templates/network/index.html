@@ -1,5 +1,12 @@
 {% extends "network/layout.html" %}
+{% load static %}
+
+{% block script %}
+    <script src="{% static 'network/index.jsx' %}" type="text/babel"></script>
+{% endblock %}
 
 {% block body %}
-    TODO
+    <div class="container" id="network-feed">
+        <!-- POSTS GO HERE -->
+    </div>
 {% endblock %}
