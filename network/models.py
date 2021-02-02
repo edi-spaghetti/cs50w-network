@@ -13,6 +13,13 @@ class Post(models.Model):
     content = models.CharField(max_length=140)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    def serialize(self):
+        return {
+            'user': self.user.username,
+            'content': self.content,
+            'timestamp': self.timestamp.strftime('%c'),
+        }
+
 
 class Like(models.Model):
     user = models.ForeignKey(
@@ -22,3 +29,10 @@ class Like(models.Model):
         'Post', on_delete=models.CASCADE, related_name='likes'
     )
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def serialize(self):
+        return {
+            'user': self.user.username,
+            'post': self.post.pk,
+            'timestamp': self.timestamp.strftime('%c'),
+        }

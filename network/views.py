@@ -1,8 +1,12 @@
+import json
+
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.apps import apps
 
 from .models import User
 
@@ -61,3 +65,23 @@ def register(request):
         return HttpResponseRedirect(reverse('index'))
     else:
         return render(request, 'network/register.html')
+
+
+# API METHODS
+
+@login_required
+def search(request):
+
+    model_name = request.GET.get('model')
+    try:
+        model = apps.get_model('network', model_name)
+    except LookupError:
+        return JsonResponse({
+            'error': f'Model of name {model_name} does not exist'
+        }, status=400)
+
+    # TODO: filters
+    values = model.objects.all()
+    json_values = [v.serialize() for v in values]
+
+    return JsonResponse(json_values, safe=False)
