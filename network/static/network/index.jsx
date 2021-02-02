@@ -6,14 +6,14 @@ class Post extends React.Component {
 
     render() {
         return (
-	        <div class="row">
-				<div class="col-2">
+	        <div className="row">
+				<div className="col-2">
 					<span>{this.props.user}</span>
 				</div>
-				<div class="col-8">
+				<div className="col-8">
 					<span>{this.props.content}</span>
 				</div>
-				<div class="col-2">
+				<div className="col-2">
 					<span>{this.props.timestamp}</span>
 				</div>
 			</div>
