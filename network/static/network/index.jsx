@@ -27,19 +27,14 @@ class App extends React.Component {
 		super(props)
 
 		this.state = {
-			posts: [
-				{
-					user: 'coolguy',
-					timestamp: 'Feb 1st 2021 22:31PM',
-					content: 'I am so cool'
-				},
-				{
-					user: 'anothercoolguy',
-					timestamp: 'Feb 1st 2021 22:35PM',
-					content: 'Yeah you are!'
-				}
-			]
+			posts: []
 		}
+	}
+
+	componentDidMount() {
+		fetch('/api/v1/search?model=post')
+		.then(response => response.json())
+		.then(posts => this.setState({ posts: posts }))
 	}
 
     render(posts) {
