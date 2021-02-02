@@ -40,6 +40,7 @@ class App extends React.Component {
     render(posts) {
         return (
 			this.state.posts.map(post => <Post
+				key={post.id}
 				user={post.user}
 				timestamp={post.timestamp}
 				content={post.content}

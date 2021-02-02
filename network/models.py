@@ -15,6 +15,7 @@ class Post(models.Model):
 
     def serialize(self):
         return {
+            'id': self.pk,
             'user': self.user.username,
             'content': self.content,
             'timestamp': self.timestamp.strftime('%c'),
@@ -32,6 +33,7 @@ class Like(models.Model):
 
     def serialize(self):
         return {
+            'id': self.pk,
             'user': self.user.username,
             'post': self.post.pk,
             'timestamp': self.timestamp.strftime('%c'),
