@@ -85,3 +85,30 @@ def search(request):
     json_values = [v.serialize() for v in values]
 
     return JsonResponse(json_values, safe=False)
+
+
+@login_required
+def create(request):
+
+    if request.method != 'POST':
+        return JsonResponse({
+            'error': f'Create method must be POST - got {request.method}'
+        }, status=400)
+
+    model_name = request.POST.get('model')
+    try:
+        Model = apps.get_model('network', model_name)
+    except LookupError:
+        return JsonResponse({
+            'error': f'Model of name {model_name} does not exist'
+        }, status=400)
+
+    model = Model.create_from_post(**request.POST)
+    if model:
+        model.save()
+        return JsonResponse(model.serialize(), status=200)
+    else:
+        return JsonResponse({
+            # TODO: more informative response
+            'error': f'Failed to create model'
+        })
