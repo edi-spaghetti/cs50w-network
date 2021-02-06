@@ -1,3 +1,6 @@
+// TODO: setup bundler
+//import cookie from "react-cookies"
+
 class NewPost extends React.Component {
 
 	constructor(props) {
@@ -7,8 +10,24 @@ class NewPost extends React.Component {
 		}
 	}
 
-	create = () => {
-		console.log(this.state.content)
+	create = (event) => {
+		const content = this.state.content
+		const t = document.querySelector('input[name = "csrfmiddlewaretoken"]')
+
+		fetch('/api/v1/create', {
+			method: 'POST',
+			headers: {
+				'X-CSRFTOKEN': t.value
+			},
+			body: JSON.stringify({
+				content: content,
+				model: 'post'
+			})
+		})
+		.then(response => response.json())
+		.then(data => console.log(data))
+
+		event.preventDefault()
 	}
 
 	updateContent = (event) => {

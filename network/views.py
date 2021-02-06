@@ -95,7 +95,8 @@ def create(request):
             'error': f'Create method must be POST - got {request.method}'
         }, status=400)
 
-    model_name = request.POST.get('model')
+    data = json.loads(request.body)
+    model_name = data.get('model')
     try:
         Model = apps.get_model('network', model_name)
     except LookupError:
@@ -103,7 +104,7 @@ def create(request):
             'error': f'Model of name {model_name} does not exist'
         }, status=400)
 
-    model = Model.create_from_post(**request.POST)
+    model = Model.create_from_post(user=request.user, **data)
     if model:
         model.save()
         return JsonResponse(model.serialize(), status=200)
@@ -111,4 +112,4 @@ def create(request):
         return JsonResponse({
             # TODO: more informative response
             'error': f'Failed to create model'
-        })
+        }, status=400)
