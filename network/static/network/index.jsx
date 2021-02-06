@@ -75,8 +75,17 @@ class App extends React.Component {
 	}
 
 	insertNewPost = (new_post) => {
+
+		// append post
 		this.setState({
 			posts: [...this.state.posts, new_post]
+		})
+
+		// clear the new post form
+		document.querySelector('#new-post-content > textarea').value = ''
+		// clear cached state value
+		this.setState({
+			content: ''
 		})
 	}
 
