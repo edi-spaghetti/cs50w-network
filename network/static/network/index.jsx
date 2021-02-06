@@ -3,39 +3,6 @@
 
 class NewPost extends React.Component {
 
-	constructor(props) {
-		super(props)
-		this.state = {
-			content: ''
-		}
-	}
-
-	create = (event) => {
-		const content = this.state.content
-		const t = document.querySelector('input[name = "csrfmiddlewaretoken"]')
-
-		fetch('/api/v1/create', {
-			method: 'POST',
-			headers: {
-				'X-CSRFTOKEN': t.value
-			},
-			body: JSON.stringify({
-				content: content,
-				model: 'post'
-			})
-		})
-		.then(response => response.json())
-		.then(data => console.log(data))
-
-		event.preventDefault()
-	}
-
-	updateContent = (event) => {
-		this.setState({
-			content: event.target.value
-		})
-	}
-
 	render() {
 		return (
 			<div id="new-post-form" className="d-flex flex-column">
@@ -43,10 +10,10 @@ class NewPost extends React.Component {
 					<h4>New Post</h4>
 				</div>
 				<div id="new-post-content" className="p-2">
-				    <textarea placeholder="Your post here" onChange={this.updateContent}></textarea>
+				    <textarea placeholder="Your post here" onChange={this.props.updateContent}></textarea>
 				</div>
 				<div id="new-post-button" className="p-2 ml-auto">
-				    <button className="btn btn-primary" onClick={this.create}>Post</button>
+				    <button className="btn btn-primary" onClick={this.props.create}>Post</button>
 				</div>
 			</div>
 		)
@@ -82,8 +49,41 @@ class App extends React.Component {
 		super(props)
 
 		this.state = {
-			posts: []
+			posts: [],
+			content: ''
 		}
+	}
+
+	create = (event) => {
+		const content = this.state.content
+		const t = document.querySelector('input[name = "csrfmiddlewaretoken"]')
+
+		fetch('/api/v1/create', {
+			method: 'POST',
+			headers: {
+				'X-CSRFTOKEN': t.value
+			},
+			body: JSON.stringify({
+				content: content,
+				model: 'post'
+			})
+		})
+		.then(response => response.json())
+		.then(data => this.insertNewPost(data))
+
+		event.preventDefault()
+	}
+
+	insertNewPost = (new_post) => {
+		this.setState({
+			posts: [...this.state.posts, new_post]
+		})
+	}
+
+	updateContent = (event) => {
+		this.setState({
+			content: event.target.value
+		})
 	}
 
 	componentDidMount() {
@@ -104,7 +104,7 @@ class App extends React.Component {
 
         return (
 			// return all posts in order, with new post form inserted at start
-			[<NewPost key={0} />].concat(data)
+			[<NewPost key={0} updateContent={this.updateContent} create={this.create}/>].concat(data)
         )
     }
 }
