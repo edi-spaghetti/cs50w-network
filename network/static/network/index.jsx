@@ -1,3 +1,39 @@
+class NewPost extends React.Component {
+
+	constructor(props) {
+		super(props)
+		this.state = {
+			content: ''
+		}
+	}
+
+	create = () => {
+		console.log(this.state.content)
+	}
+
+	updateContent = (event) => {
+		this.setState({
+			content: event.target.value
+		})
+	}
+
+	render() {
+		return (
+			<div id="new-post-form" className="d-flex flex-column">
+				<div id="new-post-title" className="p-2">
+					<h4>New Post</h4>
+				</div>
+				<div id="new-post-content" className="p-2">
+				    <textarea placeholder="Your post here" onChange={this.updateContent}></textarea>
+				</div>
+				<div id="new-post-button" className="p-2 ml-auto">
+				    <button className="btn btn-primary" onClick={this.create}>Post</button>
+				</div>
+			</div>
+		)
+	}
+}
+
 class Post extends React.Component {
 
 	constructor(props) {
@@ -38,13 +74,18 @@ class App extends React.Component {
 	}
 
     render(posts) {
-        return (
-			this.state.posts.map(post => <Post
+		let data = this.state.posts.map(
+			post => <Post
 				key={post.id}
 				user={post.user}
 				timestamp={post.timestamp}
 				content={post.content}
-			/>)
+			/>
+		)
+
+        return (
+			// return all posts in order, with new post form inserted at start
+			[<NewPost key={0} />].concat(data)
         )
     }
 }
