@@ -76,9 +76,12 @@ class App extends React.Component {
 
 	insertNewPost = (new_post) => {
 
-		// append post
+		// add post to state list
+		// TODO: insert by sorted index
+		//       currently sorting is harded coded to descending timestamp,
+		//       but if I add filters and sorting this will break.
 		this.setState({
-			posts: [...this.state.posts, new_post]
+			posts: [new_post, ...this.state.posts]
 		})
 
 		// clear the new post form
@@ -96,7 +99,7 @@ class App extends React.Component {
 	}
 
 	componentDidMount() {
-		fetch('/api/v1/search?model=post')
+		fetch('/api/v1/search?model=post&order=-timestamp')
 		.then(response => response.json())
 		.then(posts => this.setState({ posts: posts }))
 	}

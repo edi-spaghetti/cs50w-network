@@ -82,8 +82,25 @@ def search(request):
 
     # TODO: filters
     values = model.objects.all()
-    json_values = [v.serialize() for v in values]
 
+    # sort values by field in either asc or desc order
+    order = request.GET.get('order')
+    if order:
+
+        # get field name from order string
+        order_field = order
+        if order_field.startswith('-'):
+            order_field = order_field[1:]
+
+        # ensure we're using a valid field
+        if order_field in [f.name for f in model._meta.fields]:
+            values = values.order_by(order)
+        else:
+            return JsonResponse({
+                'error': f'Cannot order by {order} - not a valid field'
+            }, status=400)
+
+    json_values = [v.serialize() for v in values]
     return JsonResponse(json_values, safe=False)
 
 
