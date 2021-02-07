@@ -32,8 +32,15 @@ class Post extends React.Component {
 				<div className="col-2">
 					<span>{this.props.user}</span>
 				</div>
-				<div className="col-8">
+				<div className="col-6">
 					<span>{this.props.content}</span>
+				</div>
+				<div className="col-2">
+					<span className="icon_heart like-post-button">
+						<div className="post-like-count">
+							{this.props.like_count}
+						</div>
+					</span>
 				</div>
 				<div className="col-2">
 					<span>{this.props.timestamp}</span>
@@ -111,6 +118,7 @@ class App extends React.Component {
 				user={post.user}
 				timestamp={post.timestamp}
 				content={post.content}
+				like_count={post.like_count}
 			/>
 		)
 

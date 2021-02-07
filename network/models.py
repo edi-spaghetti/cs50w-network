@@ -19,6 +19,7 @@ class Post(models.Model):
             'user': self.user.username,
             'content': self.content,
             'timestamp': self.timestamp.strftime('%c'),
+            'like_count': self.likes.count(),
         }
 
     @classmethod
