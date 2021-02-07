@@ -1,9 +1,56 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.db import models
+
+
+def sanitize_user(user):
+    # make sure we cast request user to at least anonymous user
+    not_user = not isinstance(user, User)
+    not_anon = not isinstance(user, AnonymousUser)
+    if user is None or not_user or not_anon:
+        user = AnonymousUser()
+
+    return user
+
+
+def collate_values(fields, callbacks):
+    # add valid fields to dict
+    serial_dict = dict()
+
+    if fields == '*':
+        fields = callbacks.keys()
+
+    for field in fields:
+        if field in callbacks:
+            value = callbacks[field]()
+        else:
+            value = None
+
+        serial_dict[field] = value
+
+    return serial_dict
 
 
 class User(AbstractUser):
     followers = models.ManyToManyField('User', related_name='leaders')
+
+    def serialize(self, fields, request_user=None):
+
+        user = sanitize_user(request_user)
+
+        # callback dict to retrieve values
+        callbacks = dict(
+            id=lambda: self.pk,
+            username=lambda: self.username,
+            posts=lambda: [p.serialize() for p in self.posts],
+            follower_count=lambda: self.followers.count(),
+            leader_count=lambda: self.leaders.count(),
+            can_follow=lambda: (
+                user.is_authenticated and user.pk != self.pk
+            ),
+            is_following=lambda: self.followers.filter(id=user.id).exists()
+        )
+
+        return collate_values(fields, callbacks)
 
 
 class Post(models.Model):
@@ -13,14 +60,17 @@ class Post(models.Model):
     content = models.CharField(max_length=140)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def serialize(self):
-        return {
-            'id': self.pk,
-            'user': self.user.username,
-            'content': self.content,
-            'timestamp': self.timestamp.strftime('%c'),
-            'like_count': self.likes.count(),
-        }
+    def serialize(self, fields, request_user=None):
+
+        callbacks = dict(
+            id=lambda: self.pk,
+            user=lambda: self.user.username,
+            content=lambda: self.content,
+            timestamp=lambda: self.timestamp.strftime('%c'),
+            like_count=lambda: self.likes.count(),
+        )
+
+        return collate_values(fields, callbacks)
 
     @classmethod
     def create_from_post(cls, user=None, content=None, **kwargs):
@@ -49,13 +99,16 @@ class Like(models.Model):
     )
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def serialize(self):
-        return {
-            'id': self.pk,
-            'user': self.user.username,
-            'post': self.post.pk,
-            'timestamp': self.timestamp.strftime('%c'),
-        }
+    def serialize(self, fields, request_user=None):
+
+        callbacks = dict(
+            id=lambda: self.pk,
+            user=lambda: self.user.username,
+            post=lambda: self.post.pk,
+            timestamp=lambda: self.timestamp.strftime('%c'),
+        )
+
+        return collate_values(fields, callbacks)
 
     @classmethod
     def create_from_post(cls, user=None, post=None, **kwargs):

@@ -69,7 +69,6 @@ def register(request):
 
 # API METHODS
 
-@login_required
 def search(request):
 
     model_name = request.GET.get('model')
@@ -100,7 +99,10 @@ def search(request):
                 'error': f'Cannot order by {order} - not a valid field'
             }, status=400)
 
-    json_values = [v.serialize() for v in values]
+    fields = request.GET.get('fields', '')
+    if fields != '*':
+        fields = fields.split(',')
+    json_values = [v.serialize(fields, request.user) for v in values]
     return JsonResponse(json_values, safe=False)
 
 
@@ -124,7 +126,7 @@ def create(request):
     model = Model.create_from_post(user=request.user, **data)
     if model:
         model.save()
-        return JsonResponse(model.serialize(), status=200)
+        return JsonResponse(model.serialize('*', request.user), status=200)
     else:
         return JsonResponse({
             # TODO: more informative response

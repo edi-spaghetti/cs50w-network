@@ -106,7 +106,7 @@ class App extends React.Component {
 	}
 
 	componentDidMount() {
-		fetch('/api/v1/search?model=post&order=-timestamp')
+		fetch('/api/v1/search?model=post&order=-timestamp&fields=*')
 		.then(response => response.json())
 		.then(posts => this.setState({ posts: posts }))
 	}
