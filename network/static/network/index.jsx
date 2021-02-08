@@ -78,21 +78,28 @@ class App extends React.Component {
 			page: 'posts',
 			pageParams: {},
 			posts: [],
-			content: ''
+			content: '',
+			csrfToken: document.querySelector(
+				'input[name = "csrfmiddlewaretoken"]').value
 		}
 	}
 
 	create = (event) => {
-		const content = this.state.content
-		const t = document.querySelector('input[name = "csrfmiddlewaretoken"]')
+
+		// create handle to this for use inside fetch
+		const self = this
 
 		fetch('/api/v1/create', {
 			method: 'POST',
 			headers: {
-				'X-CSRFTOKEN': t.value
+				'X-CSRFTOKEN': self.state.csrfToken
 			},
 			body: JSON.stringify({
-				content: content,
+				// TODO: refactor new post state data
+				//       this variable is only useful for this one specific
+				//       model, and would be better generalised (maybe
+				//       something like incoming / outgoing data)
+				content: self.state.content,
 				model: 'post'
 			})
 		})
