@@ -150,7 +150,20 @@ class App extends React.Component {
 	}
 
 	componentDidMount() {
-		fetch('/api/v1/search?model=post&order=-timestamp&fields=*')
+
+		const self = this
+
+		fetch('/api/v1/search', {
+			method: 'POST',
+			headers: {
+				'X-CSRFTOKEN': self.state.csrfToken
+			},
+			body: JSON.stringify({
+				model: 'post',
+				order: '-timestamp',
+				fields: '*'
+			})
+		})
 		.then(response => response.json())
 		.then(posts => this.setState({ posts: posts }))
 	}

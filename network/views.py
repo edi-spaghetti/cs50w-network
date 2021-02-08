@@ -71,7 +71,14 @@ def register(request):
 
 def search(request):
 
-    model_name = request.GET.get('model')
+    if request.method != 'POST':
+        return JsonResponse({
+            'error': f'Search must be POST - {request.method} not supported'
+        })
+
+    query = json.loads(request.body)
+
+    model_name = query.get('model', '')
     try:
         model = apps.get_model('network', model_name)
     except LookupError:
@@ -83,7 +90,7 @@ def search(request):
     values = model.objects.all()
 
     # sort values by field in either asc or desc order
-    order = request.GET.get('order')
+    order = query.get('order')
     if order:
 
         # get field name from order string
@@ -99,7 +106,7 @@ def search(request):
                 'error': f'Cannot order by {order} - not a valid field'
             }, status=400)
 
-    fields = request.GET.get('fields', '')
+    fields = query.get('fields', '')
     if fields != '*':
         fields = fields.split(',')
     json_values = [v.serialize(fields, request.user) for v in values]
