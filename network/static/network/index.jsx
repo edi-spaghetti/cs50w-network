@@ -164,6 +164,7 @@ class App extends React.Component {
 				fields: '*'
 			})
 		})
+		// TODO: error handling on response
 		.then(response => response.json())
 		.then(posts => this.setState({ posts: posts }))
 	}

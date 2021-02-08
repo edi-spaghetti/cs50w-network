@@ -81,7 +81,7 @@ def search(request):
     model_name = query.get('model', '')
     try:
         model = apps.get_model('network', model_name)
-    except LookupError:
+    except (LookupError, ValueError):
         return JsonResponse({
             'error': f'Model of name {model_name} does not exist'
         }, status=400)
