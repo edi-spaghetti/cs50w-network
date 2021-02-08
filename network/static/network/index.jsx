@@ -30,7 +30,7 @@ class Post extends React.Component {
         return (
 	        <div className="row">
 				<div className="col-2">
-					<span>{this.props.user}</span>
+					<span className="post-item-username" onClick={(event) => this.props.viewProfile(event, this.props.user)}>{this.props.user}</span>
 				</div>
 				<div className="col-6">
 					<span>{this.props.content}</span>
@@ -50,12 +50,33 @@ class Post extends React.Component {
     }
 }
 
+class Profile extends React.Component {
+
+	constructor(props) {
+		super(props)
+		this.state = {
+			username: props.data.username
+		}
+	}
+
+	render() {
+		// TODO: add followers features (buttons and summary)
+		return (
+	        <div className="d-flex flex-column user-profile">
+				<h4>Profile: {this.state.username}</h4>
+	        </div>
+		)
+	}
+}
+
 class App extends React.Component {
 
 	constructor(props) {
 		super(props)
 
 		this.state = {
+			page: 'posts',
+			pageParams: {},
 			posts: [],
 			content: ''
 		}
@@ -105,13 +126,29 @@ class App extends React.Component {
 		})
 	}
 
+	viewProfile = (event, username) => {
+
+		// TODO: fetch user's posts
+
+		// TODO: fetch user info
+
+		// set page state to profile
+		this.setState({
+			page: 'profile',
+			pageParams: {
+				username: username,
+				posts: [],  // TODO
+			}
+		})
+	}
+
 	componentDidMount() {
 		fetch('/api/v1/search?model=post&order=-timestamp&fields=*')
 		.then(response => response.json())
 		.then(posts => this.setState({ posts: posts }))
 	}
 
-    render(posts) {
+    render() {
 		let data = this.state.posts.map(
 			post => <Post
 				key={post.id}
@@ -119,13 +156,22 @@ class App extends React.Component {
 				timestamp={post.timestamp}
 				content={post.content}
 				like_count={post.like_count}
+				viewProfile={this.viewProfile}
 			/>
 		)
 
-        return (
-			// return all posts in order, with new post form inserted at start
-			[<NewPost key={0} updateContent={this.updateContent} create={this.create}/>].concat(data)
-        )
+		// create the specific page's special component
+		var pageComponent;
+		if (this.state.page === 'posts') {
+			pageComponent = <NewPost key={0} updateContent={this.updateContent} create={this.create}/>
+		}
+		else if (this.state.page === 'profile') {
+			pageComponent = <Profile key={0} data={this.state.pageParams}/>
+		}
+
+		// add list of posts to special component
+		return [pageComponent].concat(data)
+
     }
 }
 

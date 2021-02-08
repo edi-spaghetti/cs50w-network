@@ -28,6 +28,11 @@
 	position: relative;
 }
 
+/* TODO: hover and/or transition animation */
+.post-item-username:hover {
+	cursor: pointer;
+}
+
 .post-like-count {
     width: 20px;
     height: 20px;
@@ -47,4 +52,17 @@
 
 #new-post-content textarea {
 	width: 100%;
+}
+
+
+/* PROFILE */
+
+.user-profile {
+	border: 1px solid black;
+	padding-top: 30px;
+	padding-left: 15px;
+	padding-bottom: 30px;
+	padding-right: 15px;
+	margin-top: 30px;
+	margin-bottom: 30px;
 }
