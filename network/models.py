@@ -1,76 +1,82 @@
 from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.db import models
 
-
-def sanitize_user(user):
-    # make sure we cast request user to at least anonymous user
-    not_user = not isinstance(user, User)
-    not_anon = not isinstance(user, AnonymousUser)
-    if user is None or not_user or not_anon:
-        user = AnonymousUser()
-
-    return user
+from .utils import (
+    ModelExtension,
+    field_label,
+)
 
 
-def collate_values(fields, callbacks):
-    # add valid fields to dict
-    serial_dict = dict()
-
-    if fields == '*':
-        fields = callbacks.keys()
-
-    for field in fields:
-        if field in callbacks:
-            value = callbacks[field]()
-        else:
-            value = None
-
-        serial_dict[field] = value
-
-    return serial_dict
-
-
-class User(AbstractUser):
+class User(ModelExtension, AbstractUser):
     followers = models.ManyToManyField('User', related_name='leaders')
 
-    def serialize(self, fields, request_user=None):
+    summary = field_label()
+    contextual = field_label()
 
-        user = sanitize_user(request_user)
+    def sanitize_context(self, user):
+        # make sure we cast request user to at least anonymous user
+        not_user = not isinstance(user, User)
+        not_anon = not isinstance(user, AnonymousUser)
+        if user is None or not_user or not_anon:
+            user = AnonymousUser()
 
-        # callback dict to retrieve values
-        callbacks = dict(
-            id=lambda: self.pk,
-            username=lambda: self.username,
-            posts=lambda: [p.serialize() for p in self.posts],
-            follower_count=lambda: self.followers.count(),
-            leader_count=lambda: self.leaders.count(),
-            can_follow=lambda: (
-                user.is_authenticated and user.pk != self.pk
-            ),
-            is_following=lambda: self.followers.filter(id=user.id).exists()
-        )
+        return user
 
-        return collate_values(fields, callbacks)
+    @property
+    @summary
+    def follower_count(self):
+        return self.followers.count()
+
+    @property
+    @summary
+    def leader_count(self):
+        return self.leaders.count()
+
+    @property
+    @contextual
+    def can_follow(self):
+
+        if self._context is None:
+            self.set_context(self.sanitize_context(None))
+
+        return self._context.is_authenticated and self._context.pk != self.pk
+
+    @property
+    @contextual
+    def is_following(self):
+
+        if self._context is None:
+            self.set_context(self.sanitize_context(None))
+
+        return self.followers.filter(id=self._context.id).exists()
+
+    @property
+    def date_joined_serial(self):
+        return self.date_joined.strftime('%c')
 
 
-class Post(models.Model):
+class Post(ModelExtension, models.Model):
     user = models.ForeignKey(
         'User', on_delete=models.CASCADE, related_name='posts'
     )
     content = models.CharField(max_length=140)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def serialize(self, fields, request_user=None):
+    summary = field_label()
 
-        callbacks = dict(
-            id=lambda: self.pk,
-            user=lambda: self.user.username,
-            content=lambda: self.content,
-            timestamp=lambda: self.timestamp.strftime('%c'),
-            like_count=lambda: self.likes.count(),
-        )
+    @property
+    def timestamp_serial(self):
+        return self.timestamp.strftime('%c')
 
-        return collate_values(fields, callbacks)
+    @property
+    @summary
+    def username(self):
+        return self.user.username
+
+    @property
+    @summary
+    def like_count(self):
+        return self.likes.count()
 
     @classmethod
     def create_from_post(cls, user=None, content=None, **kwargs):
@@ -90,7 +96,7 @@ class Post(models.Model):
         return cls(user=user, content=content)
 
 
-class Like(models.Model):
+class Like(ModelExtension, models.Model):
     user = models.ForeignKey(
         'User', on_delete=models.CASCADE, related_name='likes'
     )
@@ -99,16 +105,9 @@ class Like(models.Model):
     )
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def serialize(self, fields, request_user=None):
-
-        callbacks = dict(
-            id=lambda: self.pk,
-            user=lambda: self.user.username,
-            post=lambda: self.post.pk,
-            timestamp=lambda: self.timestamp.strftime('%c'),
-        )
-
-        return collate_values(fields, callbacks)
+    @property
+    def timestamp_serial(self):
+        return self.timestamp.strftime('%c')
 
     @classmethod
     def create_from_post(cls, user=None, post=None, **kwargs):

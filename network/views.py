@@ -99,7 +99,8 @@ def search(request):
             order_field = order_field[1:]
 
         # ensure we're using a valid field
-        if order_field in [f.name for f in model._meta.fields]:
+        # TODO: support ordering by summary and contextual fields
+        if order_field in model.default_fields():
             values = values.order_by(order)
         else:
             return JsonResponse({
@@ -107,8 +108,6 @@ def search(request):
             }, status=400)
 
     fields = query.get('fields', '')
-    if fields != '*':
-        fields = fields.split(',')
     json_values = [v.serialize(fields, request.user) for v in values]
     return JsonResponse(json_values, safe=False)
 

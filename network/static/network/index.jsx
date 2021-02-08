@@ -30,7 +30,7 @@ class Post extends React.Component {
         return (
 	        <div className="row">
 				<div className="col-2">
-					<span className="post-item-username" onClick={(event) => this.props.viewProfile(event, this.props.user)}>{this.props.user}</span>
+					<span className="post-item-username" onClick={(event) => this.props.viewProfile(event, this.props.username)}>{this.props.username}</span>
 				</div>
 				<div className="col-6">
 					<span>{this.props.content}</span>
@@ -173,7 +173,7 @@ class App extends React.Component {
 		let data = this.state.posts.map(
 			post => <Post
 				key={post.id}
-				user={post.user}
+				username={post.username}
 				timestamp={post.timestamp}
 				content={post.content}
 				like_count={post.like_count}
