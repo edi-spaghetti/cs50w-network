@@ -3,6 +3,28 @@ import json
 from django.db.models import Model
 
 
+def parse_filters(model, filter_):
+
+    # validate filter is a list of strings
+    if not isinstance(filter_, list):
+        raise ValueError(f'Filter must be list: got {type(filter_)}')
+    for i, f in enumerate(filter_):
+        if not isinstance(f, str):
+            raise ValueError(
+                f'Filter items must be strings, got {type(f)} at index {i}'
+            )
+
+    filter_dict = dict()
+    exclude_dict = dict()
+
+    # TODO: convert api filter syntax into django filter syntax
+    #       e.g. field==value -> filter_dict[field__exact] = value
+    #       e.g. field!=value -> exclude_dict[field__exact] = value
+    # REF: https://docs.djangoproject.com/en/dev/ref/models/querysets/#field-lookups
+
+    return filter_dict, exclude_dict
+
+
 def field_label():
     labels = set()
 

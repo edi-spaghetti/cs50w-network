@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.apps import apps
 
 from .models import User
+from .utils import parse_filters
 
 
 def index(request):
@@ -86,8 +87,17 @@ def search(request):
             'error': f'Model of name {model_name} does not exist'
         }, status=400)
 
-    # TODO: filters
-    values = model.objects.all()
+    # create filters (if any)
+    filters = query.get('filters', [])
+    try:
+        filters, excludes = parse_filters(model, filters)
+    except ValueError as v:
+        return JsonResponse({
+            'error': f'Could not parse filters: {v}'
+        }, status=400)
+
+    # get values based on filters
+    values = model.objects.filter(**filters).exclude(**excludes)
 
     # sort values by field in either asc or desc order
     order = query.get('order')
