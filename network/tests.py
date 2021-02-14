@@ -1,4 +1,6 @@
 from django.test import TestCase
+from django.contrib.auth.models import AnonymousUser
+
 from .models import User, Post, Like
 
 
@@ -126,3 +128,29 @@ class UserTests(ModelTests):
             f'valid types are list[str, dict] or {Post.SELECT_ALL} '
             f'- got {type(dict())}'
         )
+
+    def test_user_can_follow_other(self):
+        self.user.set_context(self.user2)
+        self.assertTrue(self.user.can_follow)
+
+    def test_user_cannot_follow_self(self):
+        self.user.set_context(self.user)
+        self.assertFalse(self.user.can_follow)
+
+    def test_anon_cannot_follow(self):
+        self.user.set_context(AnonymousUser())
+        self.assertFalse(self.user.can_follow)
+
+    def test_user_is_following(self):
+
+        # user starts with no followers
+        self.assertFalse(self.user.followers.all().exists())
+
+        # add one, and set follower as context
+        self.user.followers.add(self.user2)
+        self.user.set_context(self.user2)
+
+        # user now has followers, and with follower as context
+        # we can query api to confirm
+        self.assertTrue(self.user.followers.all().exists())
+        self.assertTrue(self.user.is_following)

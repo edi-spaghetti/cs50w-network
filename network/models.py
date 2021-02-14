@@ -15,9 +15,9 @@ class User(ModelExtension, AbstractUser):
 
     def sanitize_context(self, user):
         # make sure we cast request user to at least anonymous user
-        not_user = not isinstance(user, User)
+        not_user = not isinstance(user, AbstractUser)
         not_anon = not isinstance(user, AnonymousUser)
-        if user is None or not_user or not_anon:
+        if not_user and not_anon:
             user = AnonymousUser()
 
         return user
