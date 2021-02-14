@@ -71,7 +71,12 @@ class Profile extends React.Component {
 			}
 		}
 		else if (this.props.data.is_self) {
-			// TODO: something else for user viewing own profile
+			follow_btn = React.createElement(
+					'button', {
+						onClick: (event) => {alert('Mmm. Oh Yeah!')},
+						className: 'btn btn-outline-danger'
+					}, 'This Button Does Nothing... But it feels good!'
+				)
 		}
 		else {
 			// if we can't follow and the profile is not the user's own
