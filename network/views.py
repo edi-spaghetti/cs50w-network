@@ -103,21 +103,12 @@ def search(request):
 
     # sort values by field in either asc or desc order
     order = query.get('order')
-    if order:
-
-        # get field name from order string
-        order_field = order
-        if order_field.startswith('-'):
-            order_field = order_field[1:]
-
-        # ensure we're using a valid field
-        # TODO: support ordering by summary and contextual fields
-        if order_field in model.default_fields():
-            values = values.order_by(order)
-        else:
-            return JsonResponse({
-                'error': f'Cannot order by {order} - not a valid field'
-            }, status=400)
+    try:
+        values = model.order_by(order, values)
+    except ValueError as v:
+        return JsonResponse({
+            'error': f'Cannot order by {order}: {v}'
+        }, status=400)
 
     fields = query.get('fields')
     try:

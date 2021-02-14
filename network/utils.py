@@ -247,6 +247,27 @@ class ModelExtension(object):
         return fields, linked_fields
 
     @classmethod
+    def order_by(cls, field, values):
+
+        if not field:
+            return values
+        if not isinstance(field, str):
+            raise ValueError(f'expected str - got {type(field)}')
+
+        if field.startswith('-'):
+            field_name = field[1:]
+        else:
+            field_name = field
+
+        if field_name in cls.default_fields():
+            values = values.order_by(field)
+        # TODO: support ordering by summary and contextual fields
+        else:
+            raise ValueError(f'{field_name} - not a valid field')
+
+        return values
+
+    @classmethod
     def serializable_fields(cls):
         fields = cls.default_fields()
         fields = fields.union(cls.summary_fields())
