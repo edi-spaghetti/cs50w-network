@@ -22,10 +22,6 @@ class NewPost extends React.Component {
 
 class Post extends React.Component {
 
-	constructor(props) {
-		super(props)
-	}
-
     render() {
         return (
 	        <div className="row">
@@ -52,19 +48,37 @@ class Post extends React.Component {
 
 class Profile extends React.Component {
 
-	constructor(props) {
-		super(props)
-		this.state = props.data
-	}
-
 	render() {
-		// TODO: add followers features (buttons and summary)
 		// TODO: redesign this widget
+
+		var follow_btn
+		if (this.props.data.can_follow) {
+			if (this.props.data.is_following) {
+				follow_btn = React.createElement(
+					'button', {
+						onClick: this.props.clickedFollowButton,
+						className: 'btn btn-primary'
+					}, 'Unfollow'
+				)
+			}
+			else {
+				follow_btn = React.createElement(
+					'button', {
+						onClick: this.props.clickedFollowButton,
+						className: 'btn btn-outline-primary'
+					}, 'Follow'
+				)
+			}
+		}
+		// TODO: login redirect for anon
+		// TODO: something else for logged in user (i.e. self)
+
 		return (
 	        <div className="d-flex flex-column user-profile">
-				<h4>Profile: {this.state.username}</h4>
-				<h4>Followers: {this.state.follower_count}</h4>
-				<h4>Following: {this.state.leader_count}</h4>
+				<h4>Profile: {this.props.data.username}</h4>
+				<h4>Followers: {this.props.data.follower_count}</h4>
+				<h4>Following: {this.props.data.leader_count}</h4>
+				{follow_btn}
 	        </div>
 		)
 	}
@@ -145,6 +159,8 @@ class App extends React.Component {
 					'username',
 					'follower_count',
 					'leader_count',
+					'can_follow',
+					'is_following',
 					{ posts: {
 						fields: ['id', 'username', 'content',
 						'timestamp', 'like_count'],
@@ -164,6 +180,11 @@ class App extends React.Component {
 			return state
 		}))
 
+	}
+
+	clickedFollowButton = (event) => {
+		// TODO: update api method
+		console.log(event)
 	}
 
 	componentDidMount() {
@@ -208,7 +229,7 @@ class App extends React.Component {
 			pageComponent = <NewPost key={0} updateContent={this.updateContent} create={this.create}/>
 		}
 		else if (this.state.page === 'profile') {
-			pageComponent = <Profile key={0} data={this.state.pageParams}/>
+			pageComponent = <Profile key={0} data={this.state.pageParams} clickedFollowButton={this.clickedFollowButton}/>
 		}
 
 		// add list of posts to special component
