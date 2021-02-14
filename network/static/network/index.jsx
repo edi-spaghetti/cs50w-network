@@ -70,8 +70,19 @@ class Profile extends React.Component {
 				)
 			}
 		}
-		// TODO: login redirect for anon
-		// TODO: something else for logged in user (i.e. self)
+		else if (this.props.data.is_self) {
+			// TODO: something else for user viewing own profile
+		}
+		else {
+			// if we can't follow and the profile is not the user's own
+			// profile we can assume this is an anonymous user
+			follow_btn = React.createElement(
+				'button', {
+					onClick: (event) => {window.location.href = '/login'},
+					className: 'btn btn-outline-info'
+				}, 'Log in to access more features...'
+			)
+		}
 
 		return (
 	        <div className="d-flex flex-column user-profile">
@@ -161,6 +172,7 @@ class App extends React.Component {
 					'leader_count',
 					'can_follow',
 					'is_following',
+					'is_self',
 					{ posts: {
 						fields: ['id', 'username', 'content',
 						'timestamp', 'like_count'],
