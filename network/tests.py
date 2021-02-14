@@ -26,15 +26,15 @@ class UserTests(ModelTests):
 
     def test_serialize_all_direct(self):
         serialized = self.user.serialize(True)
-        expected_keys = [
+        expected_keys = {
                 'is_staff', 'is_active', 'leader_count', 'is_superuser',
                 'last_name', 'id', 'last_login', 'first_name',
                 'follower_count', 'email', 'password', 'date_joined',
-                'can_follow', 'is_following', 'username'
-        ]
+                'can_follow', 'is_following', 'is_self', 'username'
+        }
 
-        for key in expected_keys:
-            self.assertTrue(key in serialized)
+        for key in serialized.keys():
+            self.assertTrue(key in expected_keys)
 
     def test_serialize_invalid_direct_field(self):
         with self.assertRaises(ValueError) as e:

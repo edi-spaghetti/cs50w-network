@@ -51,6 +51,15 @@ class User(ModelExtension, AbstractUser):
         return self.followers.filter(id=self._context.id).exists()
 
     @property
+    @contextual
+    def is_self(self):
+
+        if self._context is None:
+            self.set_context(self.sanitize_context(None))
+
+        return self.pk == self._context.pk
+
+    @property
     def date_joined__serial(self):
         return self.date_joined.strftime('%c')
 
