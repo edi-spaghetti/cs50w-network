@@ -78,6 +78,8 @@ def search(request):
         })
 
     query = json.loads(request.body)
+    # TODO: logging
+    print(f'Got query: {query}')
 
     model_name = query.get('model', '')
     try:
@@ -117,9 +119,16 @@ def search(request):
                 'error': f'Cannot order by {order} - not a valid field'
             }, status=400)
 
-    fields = query.get('fields', '')
-    json_values = [v.serialize(fields, request.user) for v in values]
-    return JsonResponse(json_values, safe=False)
+    fields = query.get('fields')
+    try:
+        json_values = [v.serialize(fields, request.user) for v in values]
+    except ValueError as v:
+        return JsonResponse({
+            'error': f'Invalid requested fields: {v}'
+        }, status=400)
+    else:
+        print(f'Returning results: {json_values}')
+        return JsonResponse(json_values, safe=False)
 
 
 @login_required

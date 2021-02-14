@@ -51,7 +51,7 @@ class User(ModelExtension, AbstractUser):
         return self.followers.filter(id=self._context.id).exists()
 
     @property
-    def date_joined_serial(self):
+    def date_joined__serial(self):
         return self.date_joined.strftime('%c')
 
 
@@ -65,7 +65,7 @@ class Post(ModelExtension, models.Model):
     summary = field_label()
 
     @property
-    def timestamp_serial(self):
+    def timestamp__serial(self):
         return self.timestamp.strftime('%c')
 
     @property
@@ -106,7 +106,7 @@ class Like(ModelExtension, models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     @property
-    def timestamp_serial(self):
+    def timestamp__serial(self):
         return self.timestamp.strftime('%c')
 
     @classmethod
