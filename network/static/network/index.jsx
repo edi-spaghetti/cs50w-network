@@ -76,9 +76,10 @@ class App extends React.Component {
 
 		this.state = {
 			page: 'posts',
-			pageParams: {},
-			posts: [],
-			content: '',
+			pageParams: {
+				content: '',
+				posts: []
+			},
 			csrfToken: document.querySelector(
 				'input[name = "csrfmiddlewaretoken"]').value
 		}
@@ -95,11 +96,7 @@ class App extends React.Component {
 				'X-CSRFTOKEN': self.state.csrfToken
 			},
 			body: JSON.stringify({
-				// TODO: refactor new post state data
-				//       this variable is only useful for this one specific
-				//       model, and would be better generalised (maybe
-				//       something like incoming / outgoing data)
-				content: self.state.content,
+				content: self.state.pageParams.content,
 				model: 'post'
 			})
 		})
@@ -111,42 +108,57 @@ class App extends React.Component {
 
 	insertNewPost = (new_post) => {
 
-		// add post to state list
-		// TODO: insert by sorted index
-		//       currently sorting is harded coded to descending timestamp,
-		//       but if I add filters and sorting this will break.
-		this.setState({
-			posts: [new_post, ...this.state.posts]
-		})
-
 		// clear the new post form
 		document.querySelector('#new-post-content > textarea').value = ''
-		// clear cached state value
-		this.setState({
-			content: ''
+
+		this.setState((state) => {
+			// add post to state list
+			// TODO: insert by sorted index
+			//       currently sorting is hard coded to descending timestamp,
+			//       but if I add filters and sorting this will break.
+			state.pageParams.posts = [new_post, ...this.state.posts]
+			// clear cached state value
+			state.pageParams.content = ''
 		})
 	}
 
 	updateContent = (event) => {
-		this.setState({
-			content: event.target.value
+		this.setState((state) => {
+			state.pageParams.content = event.target.value
+			return state
 		})
 	}
 
 	viewProfile = (event, username) => {
 
-		// TODO: fetch user's posts
+		const self = this
 
-		// TODO: fetch user info
-
-		// set page state to profile
-		this.setState({
-			page: 'profile',
-			pageParams: {
-				username: username,
-				posts: [],  // TODO
-			}
+		fetch('/api/v1/search', {
+			method: 'POST',
+			headers: {
+				'X-CSRFTOKEN': self.state.csrfToken
+			},
+			body: JSON.stringify({
+				model: 'user',
+				fields: [
+					'username',
+					{'posts': [
+						'id', 'username', 'content', 'timestamp', 'like_count'
+					]}
+				],
+				filters: [`username == ${username}`]
+				// TODO: add limit syntax
+			})
 		})
+		.then(response => response.json())
+		// set page state to profile
+		.then(data => this.setState((state) => {
+			// TODO: on limit == 1, return object instead of array
+			state.page = 'profile'
+			state.pageParams = data[0]
+			return state
+		}))
+
 	}
 
 	componentDidMount() {
@@ -161,16 +173,20 @@ class App extends React.Component {
 			body: JSON.stringify({
 				model: 'post',
 				order: '-timestamp',
-				fields: '*'
+				fields: true
 			})
 		})
 		// TODO: error handling on response
 		.then(response => response.json())
-		.then(posts => this.setState({ posts: posts }))
+		.then(posts => this.setState((state) => {
+			state.pageParams.posts = posts
+			return state
+		}))
+
 	}
 
     render() {
-		let data = this.state.posts.map(
+		let data = this.state.pageParams.posts.map(
 			post => <Post
 				key={post.id}
 				username={post.username}
