@@ -214,7 +214,7 @@ class ModelExtension(object):
 
                 # ensure keys of dict are valid linked fields on current model
                 elif isinstance(field, dict):
-                    for sub_field, sub_request_fields in field.items():
+                    for sub_field, options in field.items():
                         try:
                             sub_field_class = cls._meta.get_field(sub_field)
                             assert isinstance(
@@ -230,7 +230,7 @@ class ModelExtension(object):
                         # fields just yet, because they will be resolved
                         # when serialize_values recurses into linked models
                         # any errors in lower levels will be revealed later
-                        linked_fields[sub_field] = sub_request_fields
+                        linked_fields[sub_field] = options
 
                 # exit with error for badly formed request
                 else:
@@ -295,14 +295,38 @@ class ModelExtension(object):
             value = self.serializable_value(field)
             serial_dict[field] = value
 
-        for field, sub_fields in linked_fields.items():
+        for field, options in linked_fields.items():
             value = getattr(self, field)
             is_multi_link = hasattr(value, 'all')
             if is_multi_link:
-                values = [m.serialize_values(sub_fields) for m in value.all()]
+
+                # extract values from multi-link field, if any
+                if isinstance(options, dict):
+                    sub_fields = options.get('fields')
+                    order = options.get('order')
+                # assume list of fields if no options given
+                elif isinstance(options, list):
+                    sub_fields = options
+                    order = None
+                # bail out if input recognised
+                else:
+                    raise ValueError(
+                        f'multi-link field expects fields as list, '
+                        f'or options as dict - got {type(options)}'
+                    )
+
+                # collect and serialize related models, optionally ordering
+                values = value.all()
+                if order:
+                    model = self._meta.get_field(field).related_model
+                    values = model.order_by(order, values)
+                values = [m.serialize_values(sub_fields) for m in values]
+
             else:
                 # we can assume this is a 1-1 or 1-many relation
-                values = value.serialize_values(sub_fields)
+                # single model links can't be sorted or filtered, so we can
+                # also assume the options are just the requested fields
+                values = value.serialize_values(options)
 
             serial_dict[field] = values
 

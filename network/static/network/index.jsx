@@ -145,9 +145,11 @@ class App extends React.Component {
 					'username',
 					'follower_count',
 					'leader_count',
-					{'posts': [
-						'id', 'username', 'content', 'timestamp', 'like_count'
-					]}
+					{ posts: {
+						fields: ['id', 'username', 'content',
+						'timestamp', 'like_count'],
+						order: '-timestamp'
+					}}
 				],
 				filters: [`username == ${username}`]
 				// TODO: add limit syntax

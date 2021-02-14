@@ -83,3 +83,46 @@ class UserTests(ModelTests):
             str(e.exception),
             f'expected inner items str or dict - got {type(set())}'
         )
+
+    def test_unsorted_multi_linked_field(self):
+        self.post2 = Post.objects.create(user=self.user, content='Test Post 2')
+
+        # default linked field sort order is by id
+        request = ['id', {'posts': ['id']}]
+        exp_result = {'id': 1, 'posts': [{'id': 1}, {'id': 2}]}
+        self.assertEqual(self.user.serialize(request), exp_result)
+
+    def test_sorted_multi_linked_field(self):
+        self.post2 = Post.objects.create(user=self.user, content='Test Post 2')
+
+        # post #2 was created later, so reverse chronological should put
+        # it at the start of the list
+        request = ['id', {'posts': {'fields': ['id'], 'order': '-timestamp'}}]
+        exp_result = {'id': 1, 'posts': [{'id': 2}, {'id': 1}]}
+        self.assertEqual(self.user.serialize(request), exp_result)
+
+    def test_sort_multi_link_by_invalid_object(self):
+        request = ['id', {'posts': None}]
+
+        with self.assertRaises(ValueError) as e:
+            _ = self.user.serialize(request)
+
+        # check we get a useful error message
+        self.assertEqual(
+            str(e.exception),
+            f'multi-link field expects fields as list, '
+            f'or options as dict - got {type(None)}'
+        )
+
+    def test_sort_single_linked_field_fails(self):
+        request = ['id', {'user': {'fields': ['id'], 'order': '-date_joined'}}]
+
+        with self.assertRaises(ValueError) as e:
+            _ = self.post.serialize(request)
+
+        # check we get a useful error message
+        self.assertEqual(
+            str(e.exception),
+            f'valid types are list[str, dict] or {Post.SELECT_ALL} '
+            f'- got {type(dict())}'
+        )
