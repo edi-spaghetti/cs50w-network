@@ -54,16 +54,17 @@ class Profile extends React.Component {
 
 	constructor(props) {
 		super(props)
-		this.state = {
-			username: props.data.username
-		}
+		this.state = props.data
 	}
 
 	render() {
 		// TODO: add followers features (buttons and summary)
+		// TODO: redesign this widget
 		return (
 	        <div className="d-flex flex-column user-profile">
 				<h4>Profile: {this.state.username}</h4>
+				<h4>Followers: {this.state.follower_count}</h4>
+				<h4>Following: {this.state.leader_count}</h4>
 	        </div>
 		)
 	}
@@ -142,6 +143,8 @@ class App extends React.Component {
 				model: 'user',
 				fields: [
 					'username',
+					'follower_count',
+					'leader_count',
 					{'posts': [
 						'id', 'username', 'content', 'timestamp', 'like_count'
 					]}
