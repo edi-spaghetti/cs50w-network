@@ -114,6 +114,49 @@ class App extends React.Component {
 			csrfToken: document.querySelector(
 				'input[name = "csrfmiddlewaretoken"]').value
 		}
+
+		// set navigation bar callbacks
+		var mapping = {
+			'network-home': this.viewHomePage,
+			'my-profile': this.viewMyProfile,
+			'all-posts': this.viewAllPosts,
+			'my-feed': this.viewFeed
+		}
+		for (const [key, value] of Object.entries(mapping)) {
+			var element = document.querySelector(`#${key}`)
+			if (element !== null) {
+				element.onclick = value
+			}
+		}
+	}
+
+	viewHomePage = (event) => {
+		// TODO: magical landing page experience
+		console.log('clicked home')
+		this.setState((state) => {
+			state.page = 'home'
+			return state
+		})
+	}
+
+	viewMyProfile = (event) => {
+		this.viewProfile(
+			event, document.querySelector('#my-profile').dataset.username
+		)
+	}
+
+	viewAllPosts = (event) => {
+		// TODO: move fetch in componentDidMount to viewAllPosts
+		console.log('clicked view all posts')
+	}
+
+	viewFeed = (event) => {
+		// TODO: implement alternative fetch
+		console.log('clicked following')
+		this.setState((state) => {
+			state.page = 'following'
+			return state
+		})
 	}
 
 	create = (event) => {

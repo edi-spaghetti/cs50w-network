@@ -16,21 +16,21 @@
         <!-- workaround to get csrf token without a bundler -->
         {% csrf_token %}
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="#">Network</a>
+            <div class="navbar-brand" id="network-home">Network</div>
           
             <div>
               <ul class="navbar-nav mr-auto">
                 {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><strong>{{ user.username }}</strong></a>
+                        <div class="nav-link" id="my-profile" data-username="{{ user.username }}"><strong>{{ user.username }}</strong></div>
                     </li>
                 {% endif %}
                 <li class="nav-item">
-                  <a class="nav-link" href="{% url 'index' %}">All Posts</a>
+                  <div class="nav-link" id="all-posts">All Posts</div>
                 </li>
                 {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Following</a>
+                        <div class="nav-link" id="my-feed">Following</div>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
