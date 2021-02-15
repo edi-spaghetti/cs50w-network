@@ -90,7 +90,7 @@ def search(request):
         }, status=400)
 
     # create filters (if any)
-    filters = query.get('filters', [])
+    filters = query.get('filters')
     try:
         filters, excludes = parse_filters(model, filters)
     except ValueError as v:

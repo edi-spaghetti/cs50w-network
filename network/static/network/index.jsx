@@ -145,6 +145,33 @@ class App extends React.Component {
 		)
 	}
 
+	search = (model, fields, filters, order, newPage) => {
+		const self = this
+
+		fetch('/api/v1/search', {
+			method: 'POST',
+			headers: {
+				'X-CSRFTOKEN': self.state.csrfToken
+			},
+			body: JSON.stringify({
+				model: model,
+				order: order,
+				fields: fields,
+				filters: filters
+			})
+		})
+		// TODO: error handling on response
+		// TODO: caching (and maybe e-tags?) to avoid re-downloading data
+		.then(response => response.json())
+		.then(posts => this.setState((state) => {
+			if (newPage !== null) {
+				state.page = newPage
+			}
+			state.pageParams.posts = posts
+			return state
+		}))
+	}
+
 	viewAllPosts = (event) => {
 
 		const self = this

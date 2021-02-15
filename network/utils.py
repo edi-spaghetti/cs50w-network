@@ -68,6 +68,9 @@ def parse_filters(model, filters):
              invalid fields or bad value conversion.
     """
 
+    # sanitize filters param
+    filters = filters or []
+
     # validate model is correct type
     if not isinstance(model, (ModelBase, ModelExtension)):
         raise ValueError(f'expected extended model, got {type(model)}')
