@@ -106,7 +106,7 @@ class App extends React.Component {
 		super(props)
 
 		this.state = {
-			page: 'posts',
+			page: 'home',
 			pageParams: {
 				content: '',
 				posts: []
@@ -146,8 +146,28 @@ class App extends React.Component {
 	}
 
 	viewAllPosts = (event) => {
-		// TODO: move fetch in componentDidMount to viewAllPosts
-		console.log('clicked view all posts')
+
+		const self = this
+
+		fetch('/api/v1/search', {
+			method: 'POST',
+			headers: {
+				'X-CSRFTOKEN': self.state.csrfToken
+			},
+			body: JSON.stringify({
+				model: 'post',
+				order: '-timestamp',
+				fields: true
+			})
+		})
+		// TODO: error handling on response
+		// TODO: caching (and maybe e-tags?) to avoid re-downloading data
+		.then(response => response.json())
+		.then(posts => this.setState((state) => {
+			state.page = 'posts'
+			state.pageParams.posts = posts
+			return state
+		}))
 	}
 
 	viewFeed = (event) => {
@@ -247,49 +267,36 @@ class App extends React.Component {
 		console.log(event)
 	}
 
-	componentDidMount() {
-
-		const self = this
-
-		fetch('/api/v1/search', {
-			method: 'POST',
-			headers: {
-				'X-CSRFTOKEN': self.state.csrfToken
-			},
-			body: JSON.stringify({
-				model: 'post',
-				order: '-timestamp',
-				fields: true
-			})
-		})
-		// TODO: error handling on response
-		.then(response => response.json())
-		.then(posts => this.setState((state) => {
-			state.pageParams.posts = posts
-			return state
-		}))
-
-	}
-
     render() {
-		let data = this.state.pageParams.posts.map(
-			post => <Post
-				key={post.id}
-				username={post.username}
-				timestamp={post.timestamp}
-				content={post.content}
-				like_count={post.like_count}
-				viewProfile={this.viewProfile}
-			/>
-		)
 
-		// create the specific page's special component
 		var pageComponent;
-		if (this.state.page === 'posts') {
-			pageComponent = <NewPost key={0} updateContent={this.updateContent} create={this.create}/>
+		var data = [];  // init as empty array so concat below doesn't fail
+		if (this.state.page === 'home') {
+			// TODO: pageComponent = <Home />
 		}
-		else if (this.state.page === 'profile') {
-			pageComponent = <Profile key={0} data={this.state.pageParams} clickedFollowButton={this.clickedFollowButton}/>
+		else {
+
+			// map data to Post components
+			data = this.state.pageParams.posts.map(
+				post => <Post
+					key={post.id}
+					username={post.username}
+					timestamp={post.timestamp}
+					content={post.content}
+					like_count={post.like_count}
+					viewProfile={this.viewProfile}
+				/>
+			)
+
+			if (this.state.page === 'posts') {
+				pageComponent = <NewPost key={0} updateContent={this.updateContent} create={this.create}/>
+			}
+			else if (this.state.page === 'profile') {
+				pageComponent = <Profile key={0} data={this.state.pageParams} clickedFollowButton={this.clickedFollowButton}/>
+			}
+			else if (this.state.page === 'following') {
+				// TODO: pageComponent = <MyFeed />
+			}
 		}
 
 		// add list of posts to special component
