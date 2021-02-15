@@ -108,8 +108,7 @@ class App extends React.Component {
 		this.state = {
 			page: 'home',
 			pageParams: {
-				content: '',
-				posts: []
+				data: null
 			},
 			csrfToken: document.querySelector(
 				'input[name = "csrfmiddlewaretoken"]').value
@@ -145,8 +144,19 @@ class App extends React.Component {
 		)
 	}
 
-	search = (model, fields, filters, order, newPage) => {
+	search = (model, fields, filters, order, limit, newState) => {
 		const self = this
+		var returnValue
+
+		// sanitize params
+		if (!model || typeof model != 'string') {
+			throw 'Model must be defined'
+		}
+		fields = fields || null
+		filters = filters || null
+		order = order || null
+		limit = limit || null
+		newState = newState || {}
 
 		fetch('/api/v1/search', {
 			method: 'POST',
@@ -157,44 +167,32 @@ class App extends React.Component {
 				model: model,
 				order: order,
 				fields: fields,
-				filters: filters
+				filters: filters,
+				limit: limit
 			})
 		})
 		// TODO: error handling on response
 		// TODO: caching (and maybe e-tags?) to avoid re-downloading data
 		.then(response => response.json())
-		.then(posts => this.setState((state) => {
-			if (newPage !== null) {
-				state.page = newPage
+		.then(data => this.setState((state) => {
+			returnValue = data
+			if (newState.page !== undefined) {
+				state.page = newState.page
 			}
-			state.pageParams.posts = posts
+			if (newState.setData) {
+				state.pageParams.data = data
+			}
 			return state
 		}))
+
+		return returnValue
 	}
 
 	viewAllPosts = (event) => {
-
-		const self = this
-
-		fetch('/api/v1/search', {
-			method: 'POST',
-			headers: {
-				'X-CSRFTOKEN': self.state.csrfToken
-			},
-			body: JSON.stringify({
-				model: 'post',
-				order: '-timestamp',
-				fields: true
-			})
-		})
-		// TODO: error handling on response
-		// TODO: caching (and maybe e-tags?) to avoid re-downloading data
-		.then(response => response.json())
-		.then(posts => this.setState((state) => {
-			state.page = 'posts'
-			state.pageParams.posts = posts
-			return state
-		}))
+		this.search(
+			'post', true, null, '-timestamp', null,
+			{page: 'posts', setData: true}
+		)
 	}
 
 	viewFeed = (event) => {
@@ -237,7 +235,7 @@ class App extends React.Component {
 			// TODO: insert by sorted index
 			//       currently sorting is hard coded to descending timestamp,
 			//       but if I add filters and sorting this will break.
-			state.pageParams.posts = [new_post, ...this.state.posts]
+			state.pageParams.data = [new_post, ...this.state.pageParams.data]
 			// clear cached state value
 			state.pageParams.content = ''
 		})
@@ -252,41 +250,21 @@ class App extends React.Component {
 
 	viewProfile = (event, username) => {
 
-		const self = this
+		var fields = [
+			'username', 'follower_count', 'leader_count', 'can_follow',
+			'is_following', 'is_self',
+			{ posts: {
+				fields: ['id', 'username', 'content',
+				'timestamp', 'like_count'],
+				order: '-timestamp'
+			}}
+		]
+		var filters = [`username == ${username}`]
 
-		fetch('/api/v1/search', {
-			method: 'POST',
-			headers: {
-				'X-CSRFTOKEN': self.state.csrfToken
-			},
-			body: JSON.stringify({
-				model: 'user',
-				fields: [
-					'username',
-					'follower_count',
-					'leader_count',
-					'can_follow',
-					'is_following',
-					'is_self',
-					{ posts: {
-						fields: ['id', 'username', 'content',
-						'timestamp', 'like_count'],
-						order: '-timestamp'
-					}}
-				],
-				filters: [`username == ${username}`]
-				// TODO: add limit syntax
-			})
-		})
-		.then(response => response.json())
-		// set page state to profile
-		.then(data => this.setState((state) => {
-			// TODO: on limit == 1, return object instead of array
-			state.page = 'profile'
-			state.pageParams = data[0]
-			return state
-		}))
-
+		this.search(
+			'user', fields, filters, null, 1,
+			{page: 'posts', setData: true}
+		)
 	}
 
 	clickedFollowButton = (event) => {
@@ -303,8 +281,20 @@ class App extends React.Component {
 		}
 		else {
 
+			if (this.state.page === 'posts') {
+				pageComponent = <NewPost key={0} updateContent={this.updateContent} create={this.create}/>
+				data = this.state.pageParams.data
+			}
+			else if (this.state.page === 'profile') {
+				pageComponent = <Profile key={0} data={this.state.pageParams.data} clickedFollowButton={this.clickedFollowButton}/>
+				data = this.state.pageParams.data.posts
+			}
+			else if (this.state.page === 'feed') {
+				// TODO: pageComponent = <MyFeed />
+			}
+
 			// map data to Post components
-			data = this.state.pageParams.posts.map(
+			data = data.map(
 				post => <Post
 					key={post.id}
 					username={post.username}
@@ -314,16 +304,6 @@ class App extends React.Component {
 					viewProfile={this.viewProfile}
 				/>
 			)
-
-			if (this.state.page === 'posts') {
-				pageComponent = <NewPost key={0} updateContent={this.updateContent} create={this.create}/>
-			}
-			else if (this.state.page === 'profile') {
-				pageComponent = <Profile key={0} data={this.state.pageParams} clickedFollowButton={this.clickedFollowButton}/>
-			}
-			else if (this.state.page === 'following') {
-				// TODO: pageComponent = <MyFeed />
-			}
 		}
 
 		// add list of posts to special component

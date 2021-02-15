@@ -10,6 +10,7 @@ from django.core.exceptions import FieldDoesNotExist
 
 OPERATORS = {
     # TODO: refactor operators as class
+    # TODO: implement in operator for multi linked fields
     # op   db lookup   is_include
     '==': ('exact',    True),
     '!=': ('exact',    False),
@@ -47,6 +48,7 @@ def convert_filter_value_by_data_type(field, value):
 
 def parse_filters(model, filters):
     """
+    # TODO: move to ModelExtension class method
     Parses incoming filters that can be used filter to models either
     positively or negatively. Filters should come in as a list of strings of
     format `<field> <operator> <value>` e.g. `id == 1` or `id!=1` (note,

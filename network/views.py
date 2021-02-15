@@ -11,6 +11,8 @@ from django.apps import apps
 from .models import User
 from .utils import parse_filters
 
+MAX_RECORDS = 10
+
 
 def index(request):
     return render(request, 'network/index.html')
@@ -78,13 +80,14 @@ def search(request):
         })
 
     query = json.loads(request.body)
-    # TODO: logging
+    # TODO: logging!!!
     print(f'Got query: {query}')
 
-    model_name = query.get('model', '')
+    model_name = query.get('model')
     try:
         model = apps.get_model('network', model_name)
-    except (LookupError, ValueError):
+    except (LookupError, ValueError, AttributeError):
+        print('model error')
         return JsonResponse({
             'error': f'Model of name {model_name} does not exist'
         }, status=400)
@@ -94,6 +97,7 @@ def search(request):
     try:
         filters, excludes = parse_filters(model, filters)
     except ValueError as v:
+        print('filters error')
         return JsonResponse({
             'error': f'Could not parse filters: {v}'
         }, status=400)
@@ -106,14 +110,31 @@ def search(request):
     try:
         values = model.order_by(order, values)
     except ValueError as v:
+        print('order error')
         return JsonResponse({
             'error': f'Cannot order by {order}: {v}'
+        }, status=400)
+
+    limit = query.get('limit') or MAX_RECORDS
+    try:
+        limit = int(limit)
+        assert 0 < limit < MAX_RECORDS + 1
+        values = values[:limit]
+    except (ValueError, TypeError, AssertionError):
+        print('limit error')
+        return JsonResponse({
+            'error': f'Limit must be positive integer '
+            f'between 1 and {MAX_RECORDS}- got {type(limit)} {limit}'
         }, status=400)
 
     fields = query.get('fields')
     try:
         json_values = [v.serialize(fields, request.user) for v in values]
+        # if limit is 1, return data as dict not array
+        if limit == 1:
+            json_values = json_values[0]
     except ValueError as v:
+        print('serialize error')
         return JsonResponse({
             'error': f'Invalid requested fields: {v}'
         }, status=400)
