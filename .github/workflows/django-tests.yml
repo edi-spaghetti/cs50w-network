@@ -1,0 +1,15 @@
+name: django-tests
+on: [push]
+jobs:
+  run-django-tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - run: pip install django
+      - run: python manage.py test
