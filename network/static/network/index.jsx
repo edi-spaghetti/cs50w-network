@@ -196,12 +196,13 @@ class App extends React.Component {
 	}
 
 	viewFeed = (event) => {
-		// TODO: implement alternative fetch
-		console.log('clicked following')
-		this.setState((state) => {
-			state.page = 'following'
-			return state
-		})
+
+		var username = document.querySelector('#my-profile').dataset.username
+		var filters = [`username == ${username}`]
+		this.search(
+			'user', [{leaders: [{posts: true}]}], filters, null, 1,
+			{page: 'feed', setData: true}
+		)
 	}
 
 	create = (event) => {
@@ -291,6 +292,14 @@ class App extends React.Component {
 			}
 			else if (this.state.page === 'feed') {
 				// TODO: pageComponent = <MyFeed />
+				{leaders: [{posts: true}]}
+				this.state.pageParams.data.leaders.forEach((leader) => {
+					leader.posts.forEach((post) => {
+						data.push(post)
+					})
+				})
+
+				// TODO: sort into reverse chronological order
 			}
 
 			// map data to Post components
