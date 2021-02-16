@@ -305,6 +305,8 @@ class ModelExtension(object):
             is_multi_link = hasattr(value, 'all')
             if is_multi_link:
 
+                model = self._meta.get_field(field).related_model
+
                 # extract values from multi-link field, if any
                 if isinstance(options, dict):
                     sub_fields = options.get('fields')
@@ -314,16 +316,19 @@ class ModelExtension(object):
                     sub_fields = options
                     order = None
                 # bail out if input recognised
+                elif options == model.SELECT_ALL:
+                    sub_fields = options
+                    order = None
                 else:
                     raise ValueError(
                         f'multi-link field expects fields as list, '
-                        f'or options as dict - got {type(options)}'
+                        f'options as dict, or {model.SELECT_ALL} '
+                        f'- got {type(options)}'
                     )
 
                 # collect and serialize related models, optionally ordering
                 values = value.all()
                 if order:
-                    model = self._meta.get_field(field).related_model
                     values = model.order_by(order, values)
                 values = [m.serialize_values(sub_fields) for m in values]
 
@@ -380,7 +385,7 @@ class ModelExtension(object):
             if isinstance(field, (RelatedField, ForeignObjectRel)):
                 # if no linked field provided, default to 'id'
                 relation_path = undotted[1:] or ['id']
-                linked_model = field.related_model()
+                linked_model = getattr(self, base_field_name)
                 linked_field = relation_path[0]
                 dotted_path = '.'.join(relation_path)
                 value = {

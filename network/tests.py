@@ -1,3 +1,6 @@
+import datetime
+import pytz
+
 from django.test import TestCase
 from django.contrib.auth.models import AnonymousUser
 
@@ -115,7 +118,8 @@ class UserTests(ModelTests):
         self.assertEqual(
             str(e.exception),
             f'multi-link field expects fields as list, '
-            f'or options as dict - got {type(None)}'
+            f'options as dict, or {self.user.SELECT_ALL}'
+            f' - got {type(None)}'
         )
 
     def test_sort_single_linked_field_fails(self):
@@ -130,6 +134,38 @@ class UserTests(ModelTests):
             f'valid types are list[str, dict] or {Post.SELECT_ALL} '
             f'- got {type(dict())}'
         )
+
+    def test_select_all_multi_linked(self):
+
+        # ensure user2 has one follower with one post
+        self.user.followers.add(self.user2)
+        self.user.save()
+        self.user2.save()
+
+        # save the timestamp to a known value
+        self.post.timestamp = datetime.datetime(
+            2021, 2, 1, 21, 21, 21, tzinfo=pytz.UTC
+        )
+        self.post.save()
+
+        request = [{'leaders': [{'posts': True}]}]
+        response = self.user2.serialize(request)
+        exp_result = {
+            'leaders': [{
+                'posts': [{
+                    'timestamp': 'Mon Feb  1 21:21:21 2021',
+                    'content': 'Test Post',
+                    'id': 1,
+                    'like_count': 1,
+                    'username': 'test',
+                    'user': {
+                        'id': 1
+                    }
+                }]
+            }]
+        }
+
+        self.assertEqual(response, exp_result)
 
     def test_user_can_follow_other(self):
         self.user.set_context(self.user2)
