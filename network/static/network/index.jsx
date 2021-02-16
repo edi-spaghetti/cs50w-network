@@ -264,7 +264,7 @@ class App extends React.Component {
 
 		this.search(
 			'user', fields, filters, null, 1,
-			{page: 'posts', setData: true}
+			{page: 'profile', setData: true}
 		)
 	}
 
