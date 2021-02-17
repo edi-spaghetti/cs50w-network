@@ -77,7 +77,7 @@ def search(request):
     if request.method != 'POST':
         return JsonResponse({
             'error': f'Search must be POST - {request.method} not supported'
-        })
+        }, status=400)
 
     query = json.loads(request.body)
     # TODO: logging!!!
