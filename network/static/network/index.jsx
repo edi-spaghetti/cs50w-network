@@ -129,20 +129,7 @@ class App extends React.Component {
 		}
 	}
 
-	viewHomePage = (event) => {
-		// TODO: magical landing page experience
-		console.log('clicked home')
-		this.setState((state) => {
-			state.page = 'home'
-			return state
-		})
-	}
-
-	viewMyProfile = (event) => {
-		this.viewProfile(
-			event, document.querySelector('#my-profile').dataset.username
-		)
-	}
+	// ----------------------------- API METHODS ------------------------------
 
 	search = (model, fields, filters, order, limit, newState) => {
 		const self = this
@@ -188,25 +175,9 @@ class App extends React.Component {
 		return returnValue
 	}
 
-	viewAllPosts = (event) => {
-		this.search(
-			'post', true, null, '-timestamp', null,
-			{page: 'posts', setData: true}
-		)
-	}
-
-	viewFeed = (event) => {
-
-		var username = document.querySelector('#my-profile').dataset.username
-		var filters = [`username == ${username}`]
-		this.search(
-			'user', [{leaders: [{posts: true}]}], filters, null, 1,
-			{page: 'feed', setData: true}
-		)
-	}
-
 	create = (event) => {
 
+		// TODO: generalise this method to be used with other models / data
 		// create handle to this for use inside fetch
 		const self = this
 
@@ -225,6 +196,8 @@ class App extends React.Component {
 
 		event.preventDefault()
 	}
+
+	// ----------------------------- STATE METHODS ----------------------------
 
 	insertNewPost = (new_post) => {
 
@@ -247,6 +220,40 @@ class App extends React.Component {
 			state.pageParams.content = event.target.value
 			return state
 		})
+	}
+
+	// --------------------------- EVENT CALLBACKS ----------------------------
+
+	viewHomePage = (event) => {
+		// TODO: magical landing page experience
+		console.log('clicked home')
+		this.setState((state) => {
+			state.page = 'home'
+			return state
+		})
+	}
+
+	viewMyProfile = (event) => {
+		this.viewProfile(
+			event, document.querySelector('#my-profile').dataset.username
+		)
+	}
+
+	viewAllPosts = (event) => {
+		this.search(
+			'post', true, null, '-timestamp', null,
+			{page: 'posts', setData: true}
+		)
+	}
+
+	viewFeed = (event) => {
+
+		var username = document.querySelector('#my-profile').dataset.username
+		var filters = [`username == ${username}`]
+		this.search(
+			'user', [{leaders: [{posts: true}]}], filters, null, 1,
+			{page: 'feed', setData: true}
+		)
 	}
 
 	viewProfile = (event, username) => {
