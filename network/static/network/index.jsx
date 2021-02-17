@@ -133,7 +133,6 @@ class App extends React.Component {
 
 	search = (model, fields, filters, order, limit, newState) => {
 		const self = this
-		var returnValue
 
 		// sanitize params
 		if (!model || typeof model != 'string') {
@@ -145,7 +144,7 @@ class App extends React.Component {
 		limit = limit || null
 		newState = newState || {}
 
-		fetch('/api/v1/search', {
+		return fetch('/api/v1/search', {
 			method: 'POST',
 			headers: {
 				'X-CSRFTOKEN': self.state.csrfToken
@@ -161,18 +160,20 @@ class App extends React.Component {
 		// TODO: error handling on response
 		// TODO: caching (and maybe e-tags?) to avoid re-downloading data
 		.then(response => response.json())
-		.then(data => this.setState((state) => {
-			returnValue = data
-			if (newState.page !== undefined) {
-				state.page = newState.page
-			}
-			if (newState.setData) {
-				state.pageParams.data = data
-			}
-			return state
-		}))
-
-		return returnValue
+		.then((data) => {
+			this.setState((state) => {
+				if (newState.setData || newState.page !== undefined) {
+					if (newState.page !== undefined) {
+						state.page = newState.page
+					}
+					if (newState.setData) {
+						state.pageParams.data = data
+					}
+				}
+				return state
+			})
+			return data
+		})
 	}
 
 	create = (event) => {
@@ -248,12 +249,24 @@ class App extends React.Component {
 
 	viewFeed = (event) => {
 
+		// first get everyone the current user is following
 		var username = document.querySelector('#my-profile').dataset.username
 		var filters = [`username == ${username}`]
 		this.search(
-			'user', [{leaders: [{posts: true}]}], filters, null, 1,
-			{page: 'feed', setData: true}
+			'user', [{leaders: ['id']}], filters, null, 1,
 		)
+		.then((data) => {
+			var user_ids = data.leaders.map(
+				leader => leader.id
+			)
+
+			filters = [`user in ${user_ids}`]
+			this.search(
+				'post', true, filters, '-timestamp', null,
+				{page: 'feed', setData: true}
+			)
+		})
+
 	}
 
 	viewProfile = (event, username) => {
@@ -299,14 +312,7 @@ class App extends React.Component {
 			}
 			else if (this.state.page === 'feed') {
 				// TODO: pageComponent = <MyFeed />
-				{leaders: [{posts: true}]}
-				this.state.pageParams.data.leaders.forEach((leader) => {
-					leader.posts.forEach((post) => {
-						data.push(post)
-					})
-				})
-
-				// TODO: sort into reverse chronological order
+				data = this.state.pageParams.data
 			}
 
 			// map data to Post components
