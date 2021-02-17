@@ -14,6 +14,7 @@ OPERATORS = {
     # op   db lookup   is_include
     '==': ('exact',    True),
     '!=': ('exact',    False),
+    'in': ('in',       True),
 }
 
 
@@ -105,7 +106,12 @@ def parse_filters(model, filters):
 
         # TODO: data type manager
         db_field = getattr(model, field).field
-        value = convert_filter_value_by_data_type(db_field, value)
+        if lookup == 'in':
+            value = value.split(',')
+            for i, v in enumerate(value):
+                value[i] = convert_filter_value_by_data_type(field, v)
+        else:
+            value = convert_filter_value_by_data_type(db_field, value)
 
         # TODO: warning if duplicate filters provided
         if is_include:
