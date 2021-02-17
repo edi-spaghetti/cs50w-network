@@ -69,6 +69,15 @@ class UserTests(ModelTests):
             f'username is not a linked field of {User}'
         )
 
+    def test_auto_id_single_linked_field(self):
+        """Tests api call that doesn't specify subfield defaults to id"""
+
+        request = ['user']
+        result = self.post.serialize(request)
+        exp_result = {'user': {'id': 1}}
+
+        self.assertEqual(result, exp_result)
+
     def test_serialize_invalid_type_outer(self):
         with self.assertRaises(ValueError) as e:
             _ = self.user.serialize({'invalid'})
