@@ -163,7 +163,9 @@ def create(request):
     model = Model.create_from_post(user=request.user, **data)
     if model:
         model.save()
-        return JsonResponse(model.serialize('*', request.user), status=200)
+        return JsonResponse(
+            model.serialize(model.SELECT_ALL, request.user),
+            status=200)
     else:
         return JsonResponse({
             # TODO: more informative response
