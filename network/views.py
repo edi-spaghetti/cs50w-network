@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.apps import apps
 
 from .models import User
-from .utils import parse_filters
+from .utils import parse_filters, sanitize_update_request
 
 MAX_RECORDS = 10
 
@@ -141,6 +141,36 @@ def search(request):
     else:
         print(f'Returning results: {json_values}')
         return JsonResponse(json_values, safe=False)
+
+
+@login_required
+def update(request):
+    if request.method != 'POST':
+        return JsonResponse({
+            'error': f'Update must be POST - {request.method} not supported'
+        }, status=400)
+
+    query = json.loads(request.body)
+
+    data = query.get('data')
+    multi_option = query.get('multiOption')
+    try:
+        data, multi_option = sanitize_update_request(data, multi_option)
+    except ValueError as v:
+        return JsonResponse({
+            'error': f'Error parsing update request: {v}'
+        })
+
+    result = list()
+    for item in data:
+        model_class = apps.get_model('network', item['model'])
+        model_instance = model_class.objects.get(id=item['id'])
+        serial_value = model_instance.update(item, request.user, multi_option)
+        result.append(serial_value)
+
+    if len(result) == 1:
+        result = result[0]
+    return JsonResponse(result, safe=False, status=200)
 
 
 @login_required

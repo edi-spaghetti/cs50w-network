@@ -11,9 +11,13 @@ class ModelTests(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user('test', password='test')
+        self.user.save()
         self.user2 = User.objects.create_user('test2', password='test2')
+        self.user2.save()
         self.post = Post.objects.create(user=self.user, content='Test Post')
+        self.post.save()
         self.like = Like.objects.create(user=self.user2, post=self.post)
+        self.like.save()
 
 
 class UserTests(ModelTests):
@@ -201,3 +205,60 @@ class UserTests(ModelTests):
         # we can query api to confirm
         self.assertTrue(self.user.followers.all().exists())
         self.assertTrue(self.user.is_following)
+
+    def test_update_direct_value(self):
+
+        self.assertNotEqual(self.user.first_name, 'Test')
+
+        request = {'model': 'user', 'id': 1, 'first_name': 'Test'}
+        result = self.user.update(request, self.user)
+
+        self.assertEqual(
+            result,
+            {'model': 'user', 'id': 1, 'first_name': 'Test'}
+        )
+        self.assertEqual(self.user.first_name, 'Test')
+
+    def test_update_set_multi_linked(self):
+
+        request = {'model': 'user', 'id': 1, 'followers': 2}
+        result = self.user.update(request, self.user2, {'followers': 'set'})
+
+        self.assertEqual(
+            result,
+            {'model': 'user', 'id': 1, 'followers': [{'id': 2}]}
+        )
+        self.assertTrue(self.user2 in self.user.followers.all())
+
+    def test_update_add_multi_linked(self):
+        self.user3 = User.objects.create_user('test3', password='test3')
+        self.user3.save()
+        self.user.followers.add(self.user3)
+        self.user.save()
+
+        request = {'model': 'user', 'id': 1, 'followers': 2}
+        result = self.user.update(request, self.user2, {'followers': 'add'})
+
+        self.assertEqual(
+            result,
+            {'model': 'user', 'id': 1, 'followers': [{'id': 2}, {'id': 3}]}
+        )
+        self.assertTrue(self.user2 in self.user.followers.all())
+        self.assertTrue(self.user3 in self.user.followers.all())
+
+    def test_update_remove_multi_linked(self):
+        self.user3 = User.objects.create_user('test3', password='test3')
+        self.user3.save()
+        self.user.followers.add(self.user3)
+        self.user.followers.add(self.user2)
+        self.user.save()
+
+        request = {'model': 'user', 'id': 1, 'followers': 2}
+        result = self.user.update(request, self.user2, {'followers': 'remove'})
+
+        self.assertEqual(
+            result,
+            {'model': 'user', 'id': 1, 'followers': [{'id': 3}]}
+        )
+        self.assertTrue(self.user2 not in self.user.followers.all())
+        self.assertTrue(self.user3 in self.user.followers.all())

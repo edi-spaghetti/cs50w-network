@@ -4,6 +4,7 @@ import json
 from django.db.models import Model
 from django.db.models.base import ModelBase
 from django.db.models.fields.related import RelatedField, ForeignObjectRel
+from django.db.models.manager import Manager
 from django.db.models.fields import IntegerField
 from django.core.exceptions import FieldDoesNotExist
 
@@ -120,6 +121,13 @@ def parse_filters(model, filters):
             exclude_dict[lookup_key] = value
 
     return filter_dict, exclude_dict
+
+
+def sanitize_update_request(request, multi_option):
+    # TODO: assert request is list of dicts with at least one
+    #       valid key, value pair, plus model name and id
+    # TODO: convert request values to appropriate type
+    return request, multi_option
 
 
 def field_label():
@@ -361,6 +369,46 @@ class ModelExtension(object):
         self.set_context(old_context)
 
         return values
+
+    def update(self, item, context=None, multi_option=None):
+        """
+        TODO
+        :param item:
+        :param context:
+        :param multi_option:
+        :return:
+        """
+
+        multi_option = multi_option or {}
+
+        return_fields = list()
+        for key, value in item.items():
+            if key in ('model', 'id'):
+                continue
+            field = getattr(self, key)
+            mode = multi_option.get(key) or 'set'
+            if isinstance(field, Manager):
+                if mode == 'add':
+                    field.add(value)
+                elif mode == 'remove':
+                    field.remove(value)
+                elif mode == 'set':
+                    field.set([value])
+                else:
+                    raise ValueError(
+                        f'multi-option can be add, remove or set '
+                        f'- got {multi_option}'
+                    )
+                return_fields.append({key: ['id']})
+            else:
+                setattr(self, key, value)
+                return_fields.append(key)
+        self.save()
+        serial_value = self.serialize(return_fields, context)
+        serial_value['id'] = item['id']
+        serial_value['model'] = item['model']
+
+        return serial_value
 
     def serializable_value(self, field_name):
         """
