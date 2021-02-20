@@ -264,8 +264,10 @@ class App extends React.Component {
 	}
 
 	updateContent = (event) => {
+		// setState operate asynchronously, so cache value here
+		var newContent = event.target.value
 		this.setState((state) => {
-			state.outData.content = event.target.value
+			state.outData.content = newContent
 			return state
 		})
 	}
