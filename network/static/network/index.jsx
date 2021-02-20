@@ -203,7 +203,7 @@ class App extends React.Component {
 
 	}
 
-	search = (model, fields, filters, order, limit, newState) => {
+	search = (model, fields, filters, order, limit, page, newState) => {
 		const self = this
 
 		// sanitize params
@@ -214,6 +214,7 @@ class App extends React.Component {
 		filters = filters || null
 		order = order || null
 		limit = limit || null
+		page = page || 1
 		newState = newState || {}
 
 		return fetch('/api/v1/search', {
@@ -226,7 +227,8 @@ class App extends React.Component {
 				order: order,
 				fields: fields,
 				filters: filters,
-				limit: limit
+				limit: limit,
+				page: page
 			})
 		})
 		// TODO: error handling on response
@@ -337,7 +339,7 @@ class App extends React.Component {
 
 	viewAllPosts = (event) => {
 		this.search(
-			'post', true, null, '-timestamp', null,
+			'post', true, null, '-timestamp', null, 1,
 			{page: 'posts', setData: true}
 		)
 	}
@@ -357,7 +359,7 @@ class App extends React.Component {
 
 			filters = [{user: {in: user_ids}}]
 			this.search(
-				'post', true, filters, '-timestamp', null,
+				'post', true, filters, '-timestamp', null, 1,
 				{page: 'feed', setData: true}
 			)
 		})
@@ -373,13 +375,13 @@ class App extends React.Component {
 			{leaders: ['id']}
 		]
 		this.search(
-			'user', fields, filters, null, 1,
+			'user', fields, filters, null, 1, 1,
 			{setData: true}
 		)
 		.then((payload) => {
 			filters = [{user: {is: payload.data.id}}]
 			this.search(
-				'post', true, filters, '-timestamp', null,
+				'post', true, filters, '-timestamp', null, 1,
 				{page: 'profile', setData: true}
 			)
 		})
