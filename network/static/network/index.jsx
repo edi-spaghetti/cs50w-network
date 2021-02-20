@@ -46,6 +46,51 @@ class Post extends React.Component {
     }
 }
 
+class PostFooter extends React.Component {
+
+	render() {
+
+		var previousButton
+		if (this.props.hasPrevious) {
+			previousButton = React.createElement(
+				'button',
+				{
+					onClick: this.props.loadPrevious,
+					className: 'btn btn-secondary'
+				},
+				'Previous'
+			)
+		}
+
+		var nextButton
+		if (this.props.hasNext) {
+			nextButton = React.createElement(
+				'button',
+				{
+					onClick: this.props.loadNext,
+					className: 'btn btn-secondary'
+				},
+				'Next'
+			)
+		}
+
+		return (
+			<div className="row">
+				<div className="col-2">
+					{previousButton}
+				</div>
+				<div className="col-8">
+					<span>Page {this.props.pageNum} of {this.props.pageCount}</span>
+				</div>
+				<div className="col-2">
+					{nextButton}
+				</div>
+			</div>
+		)
+	}
+
+}
+
 class Profile extends React.Component {
 
 	render() {
@@ -378,6 +423,7 @@ class App extends React.Component {
     render() {
 
 		var pageComponent;
+		var footer
 		var data = [];  // init as empty array so concat below doesn't fail
 		if (this.state.page === 'home') {
 			// TODO: pageComponent = <Home />
@@ -405,10 +451,22 @@ class App extends React.Component {
 					viewProfile={this.viewProfile}
 				/>
 			)
+
+			// create footer component from post metadata
+			footer = <PostFooter
+				key={'post-footer'}
+				pageNum={this.state.inData.post.pageNum}
+				pageCount={this.state.inData.post.pageCount}
+				hasPrevious={this.state.inData.post.hasPrevious}
+				hasNext={this.state.inData.post.hasNext}
+				loadNext={(event) => {console.log(event)}}
+				loadPrevious={(event) => {console.log(event)}}
+			/>
+
 		}
 
 		// add list of posts to special component
-		return [pageComponent].concat(data)
+		return [pageComponent, ...data, footer]
 
     }
 }
