@@ -194,7 +194,7 @@ class App extends React.Component {
 						state.page = newState.page
 					}
 					if (newState.setData) {
-						state.inData = data
+						state.inData[model] = data
 					}
 				}
 				return state
@@ -257,7 +257,7 @@ class App extends React.Component {
 			// TODO: insert by sorted index
 			//       currently sorting is hard coded to descending timestamp,
 			//       but if I add filters and sorting this will break.
-			state.inData.data = [new_post, ...this.state.inData.data]
+			state.inData.model.data = [new_post, ...this.state.inData.model.data]
 			// clear cached state value
 			state.outData.content = ''
 		})
@@ -320,33 +320,39 @@ class App extends React.Component {
 
 	viewProfile = (event, username) => {
 
+		var filters = [`username == ${username}`]
 		var fields = [
 			'username', 'follower_count', 'leader_count', 'can_follow',
 			'is_following', 'is_self', 'id',
-			{ posts: {
-				fields: ['id', 'username', 'content',
-				'timestamp', 'like_count'],
-				order: '-timestamp'
-			}}
+			{leaders: ['id']}
 		]
-		var filters = [`username == ${username}`]
-
 		this.search(
 			'user', fields, filters, null, 1,
-			{page: 'profile', setData: true}
+			{setData: true}
 		)
+		.then((payload) => {
+			var user_ids = payload.data.leaders.map(
+				leader => leader.id
+			)
+
+			filters = [`user in ${user_ids}`]
+			this.search(
+				'post', true, filters, '-timestamp', null,
+				{page: 'profile', setData: true}
+			)
+		})
 	}
 
 	clickedFollowButton = (event) => {
 
 		var data = [{
 			model: 'user',
-			id: this.state.inData.data.id,
+			id: this.state.inData.user.data.id,
 			followers: this.state.user.id
 		}]
 
 		var mode
-		if (this.state.inData.data.is_following) {
+		if (this.state.inData.user.data.is_following) {
 			mode = 'remove'
 		}
 		else {
@@ -360,12 +366,12 @@ class App extends React.Component {
 		this.update(data, multiOption, (data) => {
 			this.setState((state) => {
 				if (mode === 'add') {
-					state.inData.data.follower_count += 1
-					state.inData.data.is_following = true
+					state.inData.user.data.follower_count += 1
+					state.inData.user.data.is_following = true
 				}
 				else {
-					state.inData.data.follower_count -= 1
-					state.inData.data.is_following = false
+					state.inData.user.data.follower_count -= 1
+					state.inData.user.data.is_following = false
 				}
 				return state
 			})
@@ -383,19 +389,16 @@ class App extends React.Component {
 
 			if (this.state.page === 'posts') {
 				pageComponent = <NewPost key={0} updateContent={this.updateContent} create={this.create}/>
-				data = this.state.inData.data
 			}
 			else if (this.state.page === 'profile') {
-				pageComponent = <Profile key={0} data={this.state.inData.data} clickedFollowButton={this.clickedFollowButton}/>
-				data = this.state.inData.data.posts
+				pageComponent = <Profile key={0} data={this.state.inData.user.data} clickedFollowButton={this.clickedFollowButton}/>
 			}
 			else if (this.state.page === 'feed') {
 				// TODO: pageComponent = <MyFeed />
-				data = this.state.inData.data
 			}
 
 			// map data to Post components
-			data = data.map(
+			data = this.state.inData.post.data.map(
 				post => <Post
 					key={post.id}
 					username={post.username}
