@@ -108,9 +108,8 @@ class App extends React.Component {
 		this.state = {
 			user: null,
 			page: 'home',
-			pageParams: {
-				data: null
-			},
+			inData: {},
+			outData: {},
 			csrfToken: document.querySelector(
 				'input[name = "csrfmiddlewaretoken"]').value
 		}
@@ -195,7 +194,7 @@ class App extends React.Component {
 						state.page = newState.page
 					}
 					if (newState.setData) {
-						state.pageParams.data = data
+						state.inData = data
 					}
 				}
 				return state
@@ -236,7 +235,7 @@ class App extends React.Component {
 				'X-CSRFTOKEN': self.state.csrfToken
 			},
 			body: JSON.stringify({
-				content: self.state.pageParams.content,
+				content: self.state.outData.content,
 				model: 'post'
 			})
 		})
@@ -258,15 +257,15 @@ class App extends React.Component {
 			// TODO: insert by sorted index
 			//       currently sorting is hard coded to descending timestamp,
 			//       but if I add filters and sorting this will break.
-			state.pageParams.data = [new_post, ...this.state.pageParams.data]
+			state.inData.data = [new_post, ...this.state.inData.data]
 			// clear cached state value
-			state.pageParams.content = ''
+			state.outData.content = ''
 		})
 	}
 
 	updateContent = (event) => {
 		this.setState((state) => {
-			state.pageParams.content = event.target.value
+			state.outData.content = event.target.value
 			return state
 		})
 	}
@@ -303,8 +302,8 @@ class App extends React.Component {
 		this.search(
 			'user', [{leaders: ['id']}], filters, null, 1,
 		)
-		.then((data) => {
-			var user_ids = data.leaders.map(
+		.then((payload) => {
+			var user_ids = payload.data.leaders.map(
 				leader => leader.id
 			)
 
@@ -340,12 +339,12 @@ class App extends React.Component {
 
 		var data = [{
 			model: 'user',
-			id: this.state.pageParams.data.id,
+			id: this.state.inData.data.id,
 			followers: this.state.user.id
 		}]
 
 		var mode
-		if (this.state.pageParams.data.is_following) {
+		if (this.state.inData.data.is_following) {
 			mode = 'remove'
 		}
 		else {
@@ -359,12 +358,12 @@ class App extends React.Component {
 		this.update(data, multiOption, (data) => {
 			this.setState((state) => {
 				if (mode === 'add') {
-					state.pageParams.data.follower_count += 1
-					state.pageParams.data.is_following = true
+					state.inData.data.follower_count += 1
+					state.inData.data.is_following = true
 				}
 				else {
-					state.pageParams.data.follower_count -= 1
-					state.pageParams.data.is_following = false
+					state.inData.data.follower_count -= 1
+					state.inData.data.is_following = false
 				}
 				return state
 			})
@@ -382,15 +381,15 @@ class App extends React.Component {
 
 			if (this.state.page === 'posts') {
 				pageComponent = <NewPost key={0} updateContent={this.updateContent} create={this.create}/>
-				data = this.state.pageParams.data
+				data = this.state.inData.data
 			}
 			else if (this.state.page === 'profile') {
-				pageComponent = <Profile key={0} data={this.state.pageParams.data} clickedFollowButton={this.clickedFollowButton}/>
-				data = this.state.pageParams.data.posts
+				pageComponent = <Profile key={0} data={this.state.inData.data} clickedFollowButton={this.clickedFollowButton}/>
+				data = this.state.inData.data.posts
 			}
 			else if (this.state.page === 'feed') {
 				// TODO: pageComponent = <MyFeed />
-				data = this.state.pageParams.data
+				data = this.state.inData.data
 			}
 
 			// map data to Post components

@@ -7,6 +7,7 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.apps import apps
+from django.core.paginator import Paginator
 
 from .models import User
 from .utils import parse_filters, sanitize_update_request
@@ -137,13 +138,27 @@ def search(request):
     try:
         limit = int(limit)
         assert 0 < limit < MAX_RECORDS + 1
-        values = values[:limit]
     except (ValueError, TypeError, AssertionError):
         print('limit error')
         return JsonResponse({
             'error': f'Limit must be positive integer '
             f'between 1 and {MAX_RECORDS}- got {type(limit)} {limit}'
         }, status=400)
+
+    # paginate values by limit
+    paginator = Paginator(values, limit)
+    page = query.get('page') or 1
+    try:
+        page = int(page)
+        assert 0 < page < paginator.num_pages + 1
+    except (ValueError, TypeError, AssertionError):
+        print('page error')
+        return JsonResponse({
+            'error': f'Page must be a positive integer '
+            f'up to {paginator.num_pages} - got {type(page)} {page}'
+        }, status=400)
+    current_page = paginator.page(page)
+    values = current_page.object_list
 
     fields = query.get('fields')
     try:
@@ -157,8 +172,15 @@ def search(request):
             'error': f'Invalid requested fields: {v}'
         }, status=400)
     else:
-        print(f'Returning results: {json_values}')
-        return JsonResponse(json_values, safe=False)
+        payload = {
+            'data': json_values,
+            'pageNum': page,
+            'pageCount': paginator.num_pages,
+            'hasPrevious': current_page.has_previous(),
+            'hasNext': current_page.has_next(),
+        }
+        print(f'Returning results: {payload}')
+        return JsonResponse(payload, safe=False)
 
 
 @login_required
