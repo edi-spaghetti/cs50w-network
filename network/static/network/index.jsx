@@ -72,6 +72,15 @@ class Post extends React.Component {
 		})
 	}
 
+	onContentChange = (event) => {
+		// setState operates asynchronously, so cache value here
+		var newContent = event.target.value
+		this.setState((state) => {
+			state.content = newContent
+			return state
+		})
+	}
+
 	startEditing = (event) => {
 		this.setState((state) => {
 			state.isEditing = true
@@ -82,8 +91,11 @@ class Post extends React.Component {
     render() {
 
 		var editButton
+		var contentDiv
 		if (this.props.isSelf) {
 			if (this.state.isEditing) {
+
+				// save button that triggers api call to save changes
 				editButton = React.createElement(
 					'button',
 					{
@@ -92,8 +104,19 @@ class Post extends React.Component {
 					},
 					'Save'
 				)
+
+				// content can be modified while editing in textarea
+				contentDiv = React.createElement(
+					'textarea',
+					{
+						onChange: this.onContentChange,
+						className: 'post-edit-input',
+						defaultValue: this.state.content
+					}
+				)
 			}
 			else {
+				// if we're not editing, then this button allows us to start
 				editButton = React.createElement(
 					'button',
 					{
@@ -103,6 +126,11 @@ class Post extends React.Component {
 					'Edit'
 				)
 			}
+		}
+
+		// if we haven't set content div by now, we just to display it
+		if (contentDiv === undefined) {
+			contentDiv = React.createElement('span', {}, this.state.content)
 		}
 
         return (
@@ -117,7 +145,7 @@ class Post extends React.Component {
 					>{this.props.data.username}</span>
 				</div>
 				<div className="col-6">
-					<span>{this.state.content}</span>
+					{contentDiv}
 				</div>
 				<div className="col-2">
 					<span className="icon_heart like-post-button">
