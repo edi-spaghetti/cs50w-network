@@ -321,7 +321,7 @@ class App extends React.Component {
 
 		var fields = [
 			'username', 'follower_count', 'leader_count', 'can_follow',
-			'is_following', 'is_self',
+			'is_following', 'is_self', 'id',
 			{ posts: {
 				fields: ['id', 'username', 'content',
 				'timestamp', 'like_count'],
@@ -337,8 +337,38 @@ class App extends React.Component {
 	}
 
 	clickedFollowButton = (event) => {
-		// TODO: update api method
-		console.log(event)
+
+		var data = [{
+			model: 'user',
+			id: this.state.pageParams.data.id,
+			followers: this.state.user.id
+		}]
+
+		var mode
+		if (this.state.pageParams.data.is_following) {
+			mode = 'remove'
+		}
+		else {
+			mode = 'add'
+		}
+
+		var multiOption = {
+			followers: mode
+		}
+
+		this.update(data, multiOption, (data) => {
+			this.setState((state) => {
+				if (mode === 'add') {
+					state.pageParams.data.follower_count += 1
+					state.pageParams.data.is_following = true
+				}
+				else {
+					state.pageParams.data.follower_count -= 1
+					state.pageParams.data.is_following = false
+				}
+				return state
+			})
+		})
 	}
 
     render() {
