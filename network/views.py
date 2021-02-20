@@ -10,7 +10,7 @@ from django.apps import apps
 from django.core.paginator import Paginator
 
 from .models import User
-from .utils import parse_filters, sanitize_update_request
+from .utils import sanitize_update_request
 
 MAX_RECORDS = 10
 
@@ -114,7 +114,7 @@ def search(request):
     # create filters (if any)
     filters = query.get('filters')
     try:
-        filters, excludes = parse_filters(model, filters)
+        filters, excludes = model.parse_filters(filters)
     except ValueError as v:
         print('filters error')
         return JsonResponse({

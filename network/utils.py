@@ -48,80 +48,6 @@ def convert_filter_value_by_data_type(field, value):
     return value
 
 
-def parse_filters(model, filters):
-    """
-    # TODO: move to ModelExtension class method
-    Parses incoming filters that can be used filter to models either
-    positively or negatively. Filters should come in as a list of strings of
-    format `<field> <operator> <value>` e.g. `id == 1` or `id!=1` (note,
-    whitespace between terms is optional).
-    Fields will be sanitised, and must be valid for the model provided.
-    Currently supported operators are:
-        == -> positively filter field by value
-        != -> negatively filter field by value
-    Values will be converted to the appropriate data type for the field.
-    Currently supported data types are:
-        str (CharField)
-        int (NumberField, PrimaryKey)
-    :type model: :class:`Model`
-    :param filters:
-    :return: Dictionaries arranged into a format appropriate to pass as
-             keywords to :meth:`Model.filter` and :meth:`Model.exclude`.
-    :rtype: tuple[dict, dict]
-    :raises: ValueError if any filter is cannot be parsed, whether through
-             invalid fields or bad value conversion.
-    """
-
-    # sanitize filters param
-    filters = filters or []
-
-    # validate model is correct type
-    if not isinstance(model, (ModelBase, ModelExtension)):
-        raise ValueError(f'expected extended model, got {type(model)}')
-
-    # validate filter is a list of strings
-    if not isinstance(filters, list):
-        raise ValueError(f'filter must be list: got {type(filters)}')
-    for i, f in enumerate(filters):
-        if not isinstance(f, str):
-            raise ValueError(
-                f'Filter items must be strings, got {type(f)} at index {i}'
-            )
-
-    filter_dict = dict()
-    exclude_dict = dict()
-
-    # TODO: support for filtering on non-db fields
-    fields = model.default_fields()
-    reg = build_filter_regex(fields)
-
-    for f in filters:
-        try:
-            field, operator, value = reg.search(f).groups()
-        except AttributeError:
-            # TODO: more useful feedback on parse filter failure
-            raise ValueError(f'failed to parse filter: {f}')
-
-        lookup, is_include = OPERATORS[operator]
-        lookup_key = f'{field}__{lookup}'
-
-        # TODO: data type manager
-        db_field = getattr(model, field).field
-        if lookup == 'in':
-            value = value.split(',')
-            for i, v in enumerate(value):
-                value[i] = convert_filter_value_by_data_type(field, v)
-        else:
-            value = convert_filter_value_by_data_type(db_field, value)
-
-        # TODO: warning if duplicate filters provided
-        if is_include:
-            filter_dict[lookup_key] = value
-        else:
-            exclude_dict[lookup_key] = value
-
-    return filter_dict, exclude_dict
-
 
 def sanitize_update_request(request, multi_option):
     # TODO: assert request is list of dicts with at least one
@@ -264,6 +190,75 @@ class ModelExtension(object):
             )
 
         return fields, linked_fields
+
+    @classmethod
+    def parse_filters(cls, filters):
+        """
+        Parses incoming filters that can be used filter to models either
+        positively or negatively. Filters should come in as a list of strings of
+        format `<field> <operator> <value>` e.g. `id == 1` or `id!=1` (note,
+        whitespace between terms is optional).
+        Fields will be sanitised, and must be valid for the model provided.
+        Currently supported operators are:
+            == -> positively filter field by value
+            != -> negatively filter field by value
+        Values will be converted to the appropriate data type for the field.
+        Currently supported data types are:
+            str (CharField)
+            int (NumberField, PrimaryKey)
+        :param filters:
+        :return: Dictionaries arranged into a format appropriate to pass as
+                 keywords to :meth:`Model.filter` and :meth:`Model.exclude`.
+        :rtype: tuple[dict, dict]
+        :raises: ValueError if any filter is cannot be parsed, whether through
+                 invalid fields or bad value conversion.
+        """
+
+        # sanitize filters param
+        filters = filters or []
+
+        # validate filter is a list of strings
+        if not isinstance(filters, list):
+            raise ValueError(f'filter must be list: got {type(filters)}')
+        for i, f in enumerate(filters):
+            if not isinstance(f, str):
+                raise ValueError(
+                    f'Filter items must be strings, got {type(f)} at index {i}'
+                )
+
+        filter_dict = dict()
+        exclude_dict = dict()
+
+        # TODO: support for filtering on non-db fields
+        fields = cls.default_fields()
+        reg = build_filter_regex(fields)
+
+        for f in filters:
+            try:
+                field, operator, value = reg.search(f).groups()
+            except AttributeError:
+                # TODO: more useful feedback on parse filter failure
+                raise ValueError(f'failed to parse filter: {f}')
+
+            lookup, is_include = OPERATORS[operator]
+            lookup_key = f'{field}__{lookup}'
+
+            # TODO: data type manager
+            db_field = getattr(cls, field).field
+            if lookup == 'in':
+                value = value.split(',')
+                for i, v in enumerate(value):
+                    value[i] = convert_filter_value_by_data_type(field, v)
+            else:
+                value = convert_filter_value_by_data_type(db_field, value)
+
+            # TODO: warning if duplicate filters provided
+            if is_include:
+                filter_dict[lookup_key] = value
+            else:
+                exclude_dict[lookup_key] = value
+
+        return filter_dict, exclude_dict
 
     @classmethod
     def order_by(cls, field, values):
