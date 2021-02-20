@@ -22,24 +22,113 @@ class NewPost extends React.Component {
 
 class Post extends React.Component {
 
+	constructor(props) {
+		super(props)
+		this.state = {
+			isEditing: false,
+			content: props.data.content
+		}
+	}
+
+	/**
+	  * Submit current content to update post
+	  * Note, this basically re-implements App.search but I couldn't get it
+	  * working because this refers to Post, not App, so csrfToken etc cannot
+	  * be retrieved. This works, but I'd like a cleaner solution.
+	  */
+	submitChanges = (event) => {
+
+		// create handle to post object for access inside fetch request
+		var self = this
+
+		// get a handle on the button, and temporarily disable to prevent
+		// double submissions
+		var btn = event.target
+		btn.disabled = true
+
+		var data = [{
+			'model': 'post',
+			'id': this.props.data.id,
+			'content': this.state.content
+		}]
+
+		return fetch('/api/v1/update', {
+			method: 'POST',
+			headers: {
+				'X-CSRFTOKEN': self.props.csrfToken
+			},
+			body: JSON.stringify({
+				data: data
+			})
+		})
+		.then(response => response.json())
+		.then((payload) => {
+			this.setState((state) => {
+				state.isEditing = false
+				// re-enable button once promise returns and state is set
+				btn.disabled = false
+				return state
+			})
+		})
+	}
+
+	startEditing = (event) => {
+		this.setState((state) => {
+			state.isEditing = true
+			return state
+		})
+	}
+
     render() {
+
+		var editButton
+		if (this.props.isSelf) {
+			if (this.state.isEditing) {
+				editButton = React.createElement(
+					'button',
+					{
+						onClick: this.submitChanges,
+						className: 'btn btn-secondary',
+					},
+					'Save'
+				)
+			}
+			else {
+				editButton = React.createElement(
+					'button',
+					{
+						onClick: this.startEditing,
+						className: 'btn btn-secondary',
+					},
+					'Edit'
+				)
+			}
+		}
+
         return (
 	        <div className="row">
 				<div className="col-2">
-					<span className="post-item-username" onClick={(event) => this.props.viewProfile(event, this.props.username)}>{this.props.username}</span>
+					<span className="post-item-username"
+						onClick={
+							(event) => this.props.viewProfile(
+								event, this.props.data.username
+							)
+						}
+					>{this.props.data.username}</span>
 				</div>
 				<div className="col-6">
-					<span>{this.props.content}</span>
+					<span>{this.state.content}</span>
 				</div>
 				<div className="col-2">
 					<span className="icon_heart like-post-button">
 						<div className="post-like-count">
-							{this.props.like_count}
+							{this.props.data.like_count}
 						</div>
 					</span>
+					{editButton}
 				</div>
 				<div className="col-2">
-					<span>{this.props.timestamp}</span>
+					<span>{this.props.data.timestamp}</span>
 				</div>
 			</div>
         )
@@ -446,10 +535,9 @@ class App extends React.Component {
 			data = this.state.inData.post.data.map(
 				post => <Post
 					key={post.id}
-					username={post.username}
-					timestamp={post.timestamp}
-					content={post.content}
-					like_count={post.like_count}
+					data={post}
+					isSelf={post.username === this.state.user.username}
+					csrfToken={this.state.csrfToken}
 					viewProfile={this.viewProfile}
 				/>
 			)
