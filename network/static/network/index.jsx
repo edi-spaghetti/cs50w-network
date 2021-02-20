@@ -461,8 +461,20 @@ class App extends React.Component {
 				pageCount={this.state.inData.post.pageCount}
 				hasPrevious={this.state.inData.post.hasPrevious}
 				hasNext={this.state.inData.post.hasNext}
-				loadNext={(event) => {console.log(event)}}
-				loadPrevious={(event) => {console.log(event)}}
+				loadNext={(event) => {
+					this.search(
+						'post', true, null, '-timestamp', null,
+						this.state.inData.post.pageNum + 1,
+						{page: this.state.page, setData: true}
+					)
+				}}
+				loadPrevious={(event) => {
+					this.search(
+						'post', true, null, '-timestamp', null,
+						this.state.inData.post.pageNum - 1,
+						{page: this.state.page, setData: true}
+					)
+				}}
 			/>
 
 		}
