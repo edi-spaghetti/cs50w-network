@@ -262,3 +262,43 @@ class UserTests(ModelTests):
         )
         self.assertTrue(self.user2 not in self.user.followers.all())
         self.assertTrue(self.user3 in self.user.followers.all())
+
+    def test_parse_equal_filter(self):
+
+        filter_ = [{'id': {'is': 1}}]
+        includes, excludes = self.user.parse_filters(filter_)
+
+        self.assertEqual(includes, {'id__exact': 1})
+        self.assertEqual(excludes, {})
+
+    def test_convert_number_filter_value(self):
+
+        filter_ = [{'id': {'is': '1'}}]
+        includes, excludes = self.user.parse_filters(filter_)
+
+        self.assertEqual(includes, {'id__exact': 1})
+        self.assertEqual(excludes, {})
+
+    def test_parse_not_equal_filter(self):
+
+        filter_ = [{'id': {'not': 1}}]
+        includes, excludes = self.user.parse_filters(filter_)
+
+        self.assertEqual(includes, {})
+        self.assertEqual(excludes, {'id__exact': 1})
+
+    def test_parse_in_filter(self):
+
+        filter_ = [{'id': {'in': [1, 2, 3]}}]
+        includes, excludes = self.user.parse_filters(filter_)
+
+        self.assertEqual(includes, {'id__in': [1, 2, 3]})
+        self.assertEqual(excludes, {})
+
+    def test_convert_number_in_filter_value(self):
+
+        filter_ = [{'id': {'in': ['1', '2', '3']}}]
+        includes, excludes = self.user.parse_filters(filter_)
+
+        self.assertEqual(includes, {'id__in': [1, 2, 3]})
+        self.assertEqual(excludes, {})

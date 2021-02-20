@@ -300,7 +300,7 @@ class App extends React.Component {
 
 		// first get everyone the current user is following
 		var username = document.querySelector('#my-profile').dataset.username
-		var filters = [`username == ${username}`]
+		var filters = [{username: {is: username}}]
 		this.search(
 			'user', [{leaders: ['id']}], filters, null, 1,
 		)
@@ -309,7 +309,7 @@ class App extends React.Component {
 				leader => leader.id
 			)
 
-			filters = [`user in ${user_ids}`]
+			filters = [{user: {in: user_ids}}]
 			this.search(
 				'post', true, filters, '-timestamp', null,
 				{page: 'feed', setData: true}
@@ -320,7 +320,7 @@ class App extends React.Component {
 
 	viewProfile = (event, username) => {
 
-		var filters = [`username == ${username}`]
+		var filters = [{username: {is: username}}]
 		var fields = [
 			'username', 'follower_count', 'leader_count', 'can_follow',
 			'is_following', 'is_self', 'id',
@@ -331,11 +331,7 @@ class App extends React.Component {
 			{setData: true}
 		)
 		.then((payload) => {
-			var user_ids = payload.data.leaders.map(
-				leader => leader.id
-			)
-
-			filters = [`user in ${user_ids}`]
+			filters = [{user: {is: payload.data.id}}]
 			this.search(
 				'post', true, filters, '-timestamp', null,
 				{page: 'profile', setData: true}

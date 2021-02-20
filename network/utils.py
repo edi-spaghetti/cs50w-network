@@ -1,8 +1,5 @@
-import re
 import json
 
-from django.db.models import Model
-from django.db.models.base import ModelBase
 from django.db.models.fields.related import RelatedField, ForeignObjectRel
 from django.db.models.manager import Manager
 from django.db.models.fields import IntegerField
@@ -11,24 +8,11 @@ from django.core.exceptions import FieldDoesNotExist
 
 OPERATORS = {
     # TODO: refactor operators as class
-    # TODO: implement in operator for multi linked fields
     # op   db lookup   is_include
-    '==': ('exact',    True),
-    '!=': ('exact',    False),
+    'is': ('exact',    True),
+    'not': ('exact',    False),
     'in': ('in',       True),
 }
-
-
-def build_filter_regex(fields):
-    """
-    Build and compile a regex pattern used to parse filters from api
-    :param fields:
-    :return:
-    """
-    f = '|'.join(fields)
-    o = '|'.join(OPERATORS.keys())
-    reg = re.compile(f'({f})\s*({o})\s*(.+)')
-    return reg
 
 
 def convert_filter_value_by_data_type(field, value):
@@ -46,7 +30,6 @@ def convert_filter_value_by_data_type(field, value):
         value = int(value)
 
     return value
-
 
 
 def sanitize_update_request(request, multi_option):
@@ -195,9 +178,10 @@ class ModelExtension(object):
     def parse_filters(cls, filters):
         """
         Parses incoming filters that can be used filter to models either
-        positively or negatively. Filters should come in as a list of strings of
-        format `<field> <operator> <value>` e.g. `id == 1` or `id!=1` (note,
-        whitespace between terms is optional).
+        positively or negatively. Filters should come in as a list of dicts in
+        the following format:
+            [{<field>: (<operator>, <value>)}]
+            e.g. [{'id': {'is', 1}}]
         Fields will be sanitised, and must be valid for the model provided.
         Currently supported operators are:
             == -> positively filter field by value
@@ -217,13 +201,13 @@ class ModelExtension(object):
         # sanitize filters param
         filters = filters or []
 
-        # validate filter is a list of strings
+        # validate filter is a list of dicts
         if not isinstance(filters, list):
             raise ValueError(f'filter must be list: got {type(filters)}')
         for i, f in enumerate(filters):
-            if not isinstance(f, str):
+            if not isinstance(f, dict):
                 raise ValueError(
-                    f'Filter items must be strings, got {type(f)} at index {i}'
+                    f'Filter items must be dicts, got {type(f)} at index {i}'
                 )
 
         filter_dict = dict()
@@ -231,32 +215,39 @@ class ModelExtension(object):
 
         # TODO: support for filtering on non-db fields
         fields = cls.default_fields()
-        reg = build_filter_regex(fields)
 
         for f in filters:
-            try:
-                field, operator, value = reg.search(f).groups()
-            except AttributeError:
-                # TODO: more useful feedback on parse filter failure
-                raise ValueError(f'failed to parse filter: {f}')
+            for field, operators in f.items():
+                for operator, value in operators.items():
+                    if field not in fields:
+                        raise ValueError(f'invalid field - {field}')
+                    if operator not in OPERATORS.keys():
+                        raise ValueError(f'invalid operator - {operator}')
 
-            lookup, is_include = OPERATORS[operator]
-            lookup_key = f'{field}__{lookup}'
+                    lookup, is_include = OPERATORS[operator]
+                    lookup_key = f'{field}__{lookup}'
 
-            # TODO: data type manager
-            db_field = getattr(cls, field).field
-            if lookup == 'in':
-                value = value.split(',')
-                for i, v in enumerate(value):
-                    value[i] = convert_filter_value_by_data_type(field, v)
-            else:
-                value = convert_filter_value_by_data_type(db_field, value)
+                    # TODO: data type manager
+                    db_field = getattr(cls, field).field
+                    if lookup == 'in':
+                        if not isinstance(value, list):
+                            raise ValueError(
+                                f'expected list - got {type(value)} {value}'
+                            )
+                        for i, v in enumerate(value):
+                            value[i] = convert_filter_value_by_data_type(
+                                db_field, v
+                            )
+                    else:
+                        value = convert_filter_value_by_data_type(
+                            db_field, value
+                        )
 
-            # TODO: warning if duplicate filters provided
-            if is_include:
-                filter_dict[lookup_key] = value
-            else:
-                exclude_dict[lookup_key] = value
+                    # TODO: warning if duplicate filters provided
+                    if is_include:
+                        filter_dict[lookup_key] = value
+                    else:
+                        exclude_dict[lookup_key] = value
 
         return filter_dict, exclude_dict
 
