@@ -257,9 +257,10 @@ class App extends React.Component {
 			// TODO: insert by sorted index
 			//       currently sorting is hard coded to descending timestamp,
 			//       but if I add filters and sorting this will break.
-			state.inData.model.data = [new_post, ...this.state.inData.model.data]
+			state.inData.post.data = [new_post, ...state.inData.post.data]
 			// clear cached state value
 			state.outData.content = ''
+			return state
 		})
 	}
 
