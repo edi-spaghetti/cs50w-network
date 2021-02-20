@@ -106,6 +106,7 @@ class App extends React.Component {
 		super(props)
 
 		this.state = {
+			user: null,
 			page: 'home',
 			pageParams: {
 				data: null
@@ -113,6 +114,9 @@ class App extends React.Component {
 			csrfToken: document.querySelector(
 				'input[name = "csrfmiddlewaretoken"]').value
 		}
+
+		// query server for current user info and update to state
+		this.whoami()
 
 		// set navigation bar callbacks
 		var mapping = {
@@ -130,6 +134,30 @@ class App extends React.Component {
 	}
 
 	// ----------------------------- API METHODS ------------------------------
+
+	/**
+	 * Fetches and sets current user data to app state
+	 * Avoids having to specify and serialize fields in django template
+	 */
+	whoami = () => {
+
+		const self = this
+
+		fetch('/api/v1/whoami', {
+			method: 'POST',
+			headers: {
+				'X-CSRFTOKEN': self.state.csrfToken
+			}
+		})
+		.then(response => response.json())
+		.then((data) => {
+			this.setState((state) => {
+				state.user = data
+				return state
+			})
+		})
+
+	}
 
 	search = (model, fields, filters, order, limit, newState) => {
 		const self = this

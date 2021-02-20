@@ -72,6 +72,24 @@ def register(request):
 
 # API METHODS
 
+def whoami(request):
+
+    if request.method != 'POST':
+        return JsonResponse({
+            'error': f'Search must be POST - {request.method} not supported'
+        }, status=400)
+
+    try:
+        return JsonResponse(
+            request.user.serialize(True, request.user),
+            status=200
+        )
+    except AttributeError:
+        # current user is anonymous, return dict with id
+        # to keep data structure in React consistent
+        return JsonResponse({'id': None}, status=200)
+
+
 def search(request):
 
     if request.method != 'POST':
