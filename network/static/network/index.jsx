@@ -204,6 +204,26 @@ class App extends React.Component {
 		})
 	}
 
+	update (data, multiOption, onResponse) {
+
+		const self = this
+
+		// TODO: sanitize params
+
+		return fetch('/api/v1/update', {
+			method: 'POST',
+			headers: {
+				'X-CSRFTOKEN': self.state.csrfToken
+			},
+			body: JSON.stringify({
+				data: data,
+				multiOption: multiOption
+			})
+		})
+		.then(response => response.json())
+		.then(onResponse)
+	}
+
 	create = (event) => {
 
 		// TODO: generalise this method to be used with other models / data
