@@ -188,7 +188,7 @@ textarea {
 
 /* PROFILE */
 
-.user-profile {
+.user-profile, .my-feed-header {
 	border: 1px solid black;
 	padding-top: 30px;
 	padding-left: 15px;
@@ -196,6 +196,10 @@ textarea {
 	padding-right: 15px;
 	margin-top: 30px;
 	margin-bottom: 30px;
+}
+
+.my-feed-header {
+	text_align: center;
 }
 
 /* Footer */

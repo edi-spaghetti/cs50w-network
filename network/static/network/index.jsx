@@ -333,6 +333,17 @@ class Home extends React.Component {
 	}
 }
 
+class MyFeed extends React.Component {
+
+	render() {
+		return (
+			<div className="my-feed-header">
+				<h4>My Feed</h4>
+			</div>
+		)
+	}
+}
+
 class App extends React.Component {
 
 	constructor(props) {
@@ -627,7 +638,7 @@ class App extends React.Component {
 				pageComponent = <Profile key={0} data={this.state.inData.user.data} clickedFollowButton={this.clickedFollowButton}/>
 			}
 			else if (this.state.page === 'feed') {
-				// TODO: pageComponent = <MyFeed />
+				pageComponent = <MyFeed key="my-feed-header" />
 			}
 
 			// map data to Post components
