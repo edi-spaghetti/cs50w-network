@@ -12,7 +12,7 @@
 	font-style: normal;
 }
 
-.icon_heart {
+.icon_heart, .icon_pencil, .icon_floppy_alt {
 	font-family: 'ElegantIcons';
 	font-size: 30px;
 }
@@ -21,51 +21,143 @@
 	content: "\e089";
 }
 
+.icon_pencil:before {
+	content: "\6a";
+}
+
+.icon_floppy_alt:before {
+	content: "\e0e4";
+}
+
+
+
+/* COLOURS *//*
+cyan: #61dafb;
+darkcyan: #037696;
+charcoal: #20232a;
+darkcoal: #191a19;
+off-white: #cacecf;
+*/
+
+/* MAIN STYLING */
+
+body {
+	background: #20232a;
+	color: #61dafb;
+}
+
 
 /* NAVBAR */
 
+.navbar {
+	background: #191a19;
+	color: #cacecf;
+}
+
 .nav-link, .navbar-brand {
 	cursor: pointer;
+	color: #cacecf;
+}
+
+.nav-link:hover, .navbar-brand:hover, .nav-link a:hover {
+	color: #61dafb;
+}
+
+.nav-link a {
+	text-decoration: none;
 }
 
 /* POSTS */
+
+.post-item {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
 
 .like-post-button {
 	position: relative;
 }
 
-/* TODO: hover and/or transition animation */
-.post-item-username:hover {
+.post-item-username {
 	cursor: pointer;
+	color: #61dafb;
+}
+
+.post-item-username:hover {
+	color: #cacecf;
 }
 
 .post-like-count {
     width: 20px;
     height: 20px;
     border-radius: 15px;
-    top: -3px;
+    top: 0px;
     right: -9px;
     text-align: center;
     position: absolute;
-    background-color: black;
+    background-color: #191a19;
     color: white;
     font-family: auto;
     font-size: 10px;
 }
 
 
-/* NEW POST FORM */
+/* NEW / EDIT POST TEXT */
 
-#new-post-content textarea {
+textarea {
 	width: 100%;
+	background: #cacecf;
+	color: #037696;
+	font-weight: 500;
+	border-radius: 5px;
+	padding: 5px;
 }
-
-/* EDIT POST FORM */
 
 .post-edit-input {
 	width: 100%;
 }
 
+/* LIKE POST */
+
+.like-post-button {
+	position: absolute;
+	top: -5px;
+	left: 0px;
+}
+
+@keyframes pulsate {
+    0% {
+        font-size: 30px;
+    }
+    50% {
+        font-size: 32px;
+    }
+    100% {
+        font-size: 30px;
+    }
+}
+
+.like-post-button:hover {
+	animation: pulsate 2s infinite;
+}
+
+/* EDIT / SAVE POST BUTTON */
+
+.post-edit-button {
+	/* flip it horizontally */
+	transform: scale(-1, 1);
+	position: absolute;
+	top: -5px;
+	left: 55px;
+}
+
+.post-save-button {
+	/* flip it horizontally */
+	transform: scale(-1, 1);
+	position: absolute;
+	top: -5px;
+	left: 55px;
+}
 
 /* PROFILE */
 
@@ -77,4 +169,12 @@
 	padding-right: 15px;
 	margin-top: 30px;
 	margin-bottom: 30px;
+}
+
+/* Footer */
+
+.post-footer {
+	margin-top: 15px;
+	margin-bottom: 15px;
+	text-align: center;
 }

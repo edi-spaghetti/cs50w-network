@@ -4,13 +4,18 @@
 class NewPost extends React.Component {
 
 	render() {
+		// TODO: get maxlength contstraint from schema
 		return (
 			<div id="new-post-form" className="d-flex flex-column">
 				<div id="new-post-title" className="p-2">
 					<h4>New Post</h4>
 				</div>
 				<div id="new-post-content" className="p-2">
-				    <textarea placeholder="Your post here" onChange={this.props.updateContent}></textarea>
+				    <textarea
+				        placeholder="Say something interesting"
+				        onChange={this.props.updateContent}
+				        maxlength="140"
+			        ></textarea>
 				</div>
 				<div id="new-post-button" className="p-2 ml-auto">
 				    <button className="btn btn-primary" onClick={this.props.create}>Post</button>
@@ -146,33 +151,33 @@ class Post extends React.Component {
 
 				// save button that triggers api call to save changes
 				editButton = React.createElement(
-					'button',
+					'span',
 					{
 						onClick: this.submitChanges,
-						className: 'btn btn-secondary',
-					},
-					'Save'
+						className: 'icon_floppy_alt post-save-button',
+					}
 				)
 
 				// content can be modified while editing in textarea
+				// TODO: get maxlength constraints from schema
 				contentDiv = React.createElement(
 					'textarea',
 					{
 						onChange: this.onContentChange,
 						className: 'post-edit-input',
-						defaultValue: this.state.content
+						defaultValue: this.state.content,
+						maxLength: 140
 					}
 				)
 			}
 			else {
 				// if we're not editing, then this button allows us to start
 				editButton = React.createElement(
-					'button',
+					'span',
 					{
 						onClick: this.startEditing,
-						className: 'btn btn-secondary',
-					},
-					'Edit'
+						className: 'icon_pencil post-edit-button',
+					}
 				)
 			}
 		}
@@ -183,7 +188,7 @@ class Post extends React.Component {
 		}
 
         return (
-	        <div className="row">
+	        <div className="row post-item">
 				<div className="col-2">
 					<span className="post-item-username"
 						onClick={
@@ -241,7 +246,7 @@ class PostFooter extends React.Component {
 		}
 
 		return (
-			<div className="row">
+			<div className="row post-footer">
 				<div className="col-2">
 					{previousButton}
 				</div>
