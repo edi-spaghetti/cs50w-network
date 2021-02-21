@@ -141,14 +141,15 @@ class Post(ModelExtension, models.Model):
             )
         elif isinstance(context, AbstractUser) and not context.is_superuser:
             # logged in users can only edit fields on their own posts
-            if self.user.pk != context.pk:
+            editing_self = (
+                (self.user.pk == context.pk and field == 'content') or
+                (field == 'likes' and value == context.pk)
+            )
+            if not editing_self:
                 raise PermissionError(
-                    f'user {context.pk} may not edit post '
-                    f'owned by user {self.user.pk}'
-                )
-            if field != 'content':
-                raise PermissionError(
-                    f'user may only edit post content'
+                    f"user '{context.pk}' may not edit field '{field}' "
+                    f"with value '{value}' on post '{self.id}' owned by "
+                    f"user '{self.user.pk}'"
                 )
         else:
             raise PermissionError(

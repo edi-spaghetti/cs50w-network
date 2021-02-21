@@ -300,3 +300,28 @@ class UserTests(ModelTests):
 
         self.assertEqual(includes, {'id__in': [1, 2, 3]})
         self.assertEqual(excludes, {})
+
+
+class PostTests(ModelTests):
+
+    def test_user_can_like_post(self):
+
+        self.assertTrue(
+            self.post.has_edit_permissions(
+                'likes', self.user2.id, self.user2
+            )
+        )
+
+    def test_user_cannot_edit_others_likes(self):
+
+        with self.assertRaises(PermissionError) as p:
+            self.post.has_edit_permissions(
+                'likes', self.user2.id, self.user
+            )
+
+        # assert we get a useful error message
+        self.assertEqual(
+            p.exception.args,
+            ("user '1' may not edit field 'likes' with value '2' "
+             "on post '1' owned by user '1'", )
+        )
