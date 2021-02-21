@@ -26,7 +26,9 @@ class Post extends React.Component {
 		super(props)
 		this.state = {
 			isEditing: false,
-			content: props.data.content
+			content: props.data.content,
+			i_like: props.data.i_like,
+			like_count: props.data.like_count
 		}
 	}
 
@@ -85,6 +87,53 @@ class Post extends React.Component {
 		this.setState((state) => {
 			state.isEditing = true
 			return state
+		})
+	}
+
+	likePost = (event) => {
+
+		// create handle to post object for access inside fetch request
+		var self = this
+
+		// disable like button while waiting for response
+		var btn = event.target
+		btn.disabled = true
+
+		var data = [{
+			'model': 'post',
+			'id': this.props.data.id,
+			'likes': this.props.selfID
+		}]
+		var mode
+		var newLikeCount
+		if (this.state.i_like) {
+			mode = 'remove'
+			newLikeCount = this.state.like_count - 1
+		}
+		else {
+			mode = 'add'
+			newLikeCount = this.state.like_count + 1
+		}
+
+		return fetch('/api/v1/update', {
+			method: 'POST',
+			headers: {
+				'X-CSRFTOKEN': self.props.csrfToken
+			},
+			body: JSON.stringify({
+				data: data,
+				multiOption: {'likes': mode}
+			})
+		})
+		.then(response => response.json())
+		.then((payload) => {
+			this.setState((state) => {
+				state.i_like = !state.i_like
+				state.like_count = newLikeCount
+				// re-enable button once promise returns and state is set
+				btn.disabled = false
+				return state
+			})
 		})
 	}
 
@@ -148,9 +197,9 @@ class Post extends React.Component {
 					{contentDiv}
 				</div>
 				<div className="col-2">
-					<span className="icon_heart like-post-button">
+					<span className="icon_heart like-post-button" onClick={this.likePost}>
 						<div className="post-like-count">
-							{this.props.data.like_count}
+							{this.state.like_count}
 						</div>
 					</span>
 					{editButton}
@@ -564,6 +613,7 @@ class App extends React.Component {
 				post => <Post
 					key={post.id}
 					data={post}
+					selfID={this.state.user.id}
 					isSelf={post.username === this.state.user.username}
 					csrfToken={this.state.csrfToken}
 					viewProfile={this.viewProfile}
