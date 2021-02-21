@@ -318,10 +318,13 @@ class Profile extends React.Component {
 
 class Home extends React.Component {
 
+	componentDidMount() {
+		setTimeout(() => {
+			this.props.redirect()
+		}, 5000)
+	}
+
 	render() {
-
-		// TODO: redirect to all posts once animation is complete
-
 		return (
 			<div className="home-container">
 				<span className="home-icon icon_genius"></span>
@@ -613,7 +616,7 @@ class App extends React.Component {
 		var footer
 		var data = [];  // init as empty array so concat below doesn't fail
 		if (this.state.page === 'home') {
-			pageComponent = <Home key="home-component"/>
+			pageComponent = <Home key="home-component" redirect={this.viewAllPosts}/>
 		}
 		else {
 
