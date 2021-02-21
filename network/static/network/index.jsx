@@ -130,15 +130,25 @@ class Post extends React.Component {
 				multiOption: {'likes': mode}
 			})
 		})
-		.then(response => response.json())
+		.then((response) => {
+			if (response.redirected) {
+				// TODO: after login, the like should be submitted
+				document.location = response.url
+				return false
+			}
+
+			return response.json()
+		})
 		.then((payload) => {
-			this.setState((state) => {
-				state.iLike = !state.iLike
-				state.likeCount = newLikeCount
-				// re-enable button once promise returns and state is set
-				btn.disabled = false
-				return state
-			})
+			if (payload) {
+				this.setState((state) => {
+					state.iLike = !state.iLike
+					state.likeCount = newLikeCount
+					// re-enable button once promise returns and state is set
+					btn.disabled = false
+					return state
+				})
+			}
 		})
 	}
 
@@ -485,8 +495,20 @@ class App extends React.Component {
 				model: 'post'
 			})
 		})
-		.then(response => response.json())
-		.then(data => this.insertNewPost(data))
+		.then((response) => {
+			if (response.redirected) {
+				// TODO: after login, the post should be created
+				document.location = response.url
+				return false
+			}
+
+			return response.json()
+		})
+		.then((payload) => {
+			if (payload) {
+				this.insertNewPost(payload)
+			}
+		})
 
 		event.preventDefault()
 	}
