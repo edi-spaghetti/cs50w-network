@@ -22,6 +22,48 @@ class User(ModelExtension, AbstractUser):
 
         return user
 
+    def has_read_permissions(self, field, value, context):
+        """
+        TODO
+        :param field:
+        :param value:
+        :param context:
+        :return:
+        """
+        return True
+
+    def has_edit_permissions(self, field, value, context):
+        """
+        Authorises edit action on given field
+        :param field: Field to apply change
+        :param value: Value to apply to field
+        :param context: User requesting to make the change
+        :return: True if has permissions
+        :raises: PermissionError if not allowed
+        """
+
+        if isinstance(context, AnonymousUser):
+            raise PermissionError(
+                f'login required'
+            )
+        elif isinstance(context, AbstractUser) and not context.is_superuser:
+            # logged in users can edit fields on their own user, or add/remove
+            # themselves as followers of other users
+            editing_self = (
+                    self.pk == context.pk or
+                    (field == 'followers' and value == context.pk)
+            )
+            if not editing_self:
+                raise PermissionError(
+                    f'user may not edit other user fields'
+                )
+        else:
+            raise PermissionError(
+                f'invalid context, expected User - got {type(context)}'
+            )
+
+        return True
+
     @property
     @summary
     def follower_count(self):
@@ -73,6 +115,47 @@ class Post(ModelExtension, models.Model):
 
     summary = field_label()
 
+    def has_read_permissions(self, field, value, context):
+        """
+        TODO
+        :param field:
+        :param value:
+        :param context:
+        :return:
+        """
+        return True
+
+    def has_edit_permissions(self, field, value, context):
+        """
+        Authorises edit action on given field
+        :param field: Field to apply change
+        :param value: Value to apply to field
+        :param context: User requesting to make the change
+        :return: True if has permissions
+        :raises: PermissionError if not allowed
+        """
+        if isinstance(context, AnonymousUser):
+            raise PermissionError(
+                f'login required'
+            )
+        elif isinstance(context, AbstractUser) and not context.is_superuser:
+            # logged in users can only edit fields on their own posts
+            if self.user.pk != context.pk:
+                raise PermissionError(
+                    f'user {context.pk} may not edit post '
+                    f'owned by user {self.user.pk}'
+                )
+            if field != 'content':
+                raise PermissionError(
+                    f'user may only edit post content'
+                )
+        else:
+            raise PermissionError(
+                f'invalid context, expected User - got {type(context)}'
+            )
+
+        return True
+
     @property
     def timestamp__serial(self):
         return self.timestamp.strftime('%c')
@@ -113,6 +196,39 @@ class Like(ModelExtension, models.Model):
         'Post', on_delete=models.CASCADE, related_name='likes'
     )
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def has_read_permissions(self, field, value, context):
+        """
+        TODO
+        :param field:
+        :param value:
+        :param context:
+        :return:
+        """
+        return True
+
+    def has_edit_permissions(self, field, value, context):
+        """
+        Authorises edit action on given field
+        :param field: Field to apply change
+        :param value: Value to apply to field
+        :param context: User requesting to make the change
+        :return: True if has permissions
+        :raises: PermissionError if not allowed
+        """
+        if isinstance(context, AnonymousUser):
+            raise PermissionError(
+                f'login required'
+            )
+        elif isinstance(context, AbstractUser) and not context.is_superuser:
+            # TODO
+            pass
+        else:
+            raise PermissionError(
+                f'invalid context, expected User - got {type(context)}'
+            )
+
+        return True
 
     @property
     def timestamp__serial(self):

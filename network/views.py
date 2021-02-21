@@ -201,6 +201,20 @@ def update(request):
             'error': f'Error parsing update request: {v}'
         })
 
+    for item in data:
+        model_class = apps.get_model('network', item['model'])
+        model_instance = model_class.objects.get(id=item['id'])
+        try:
+            for field, value in item.items():
+                if field not in ('model', 'id'):
+                    assert model_instance.has_edit_permissions(
+                        field, value, request.user
+                    )
+        except (PermissionError, AssertionError) as p:
+            return JsonResponse({
+                'error': f'Unauthorised request: {p}'
+            }, status=403)
+
     result = list()
     for item in data:
         model_class = apps.get_model('network', item['model'])
