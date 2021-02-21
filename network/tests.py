@@ -168,6 +168,7 @@ class UserTests(ModelTests):
                     'content': 'Test Post',
                     'id': 1,
                     'like_count': 0,
+                    'i_like': False,
                     'username': 'test',
                     'user': {
                         'id': 1
@@ -304,6 +305,16 @@ class UserTests(ModelTests):
 
 class PostTests(ModelTests):
 
+    def test_serialize_all_direct(self):
+        serialized = self.post.serialize(True)
+        expected_keys = {
+            'id', 'content', 'user', 'like_count', 'username', 'timestamp',
+            'i_like'
+        }
+
+        for key in serialized.keys():
+            self.assertTrue(key in expected_keys)
+
     def test_user_can_like_post(self):
 
         self.assertTrue(
@@ -325,3 +336,16 @@ class PostTests(ModelTests):
             ("user '1' may not edit field 'likes' with value '2' "
              "on post '1' owned by user '1'", )
         )
+
+    def test_serialize_i_like_positive(self):
+
+        self.post.likes.add(self.user2)
+        self.post.save()
+
+        result = self.post.serialize(['i_like', 'id'], self.user2)
+        self.assertEqual(result, {'id': 1, 'i_like': True})
+
+    def test_serialize_i_like_negative(self):
+
+        result = self.post.serialize(['i_like', 'id'], self.user2)
+        self.assertEqual(result, {'id': 1, 'i_like': False})

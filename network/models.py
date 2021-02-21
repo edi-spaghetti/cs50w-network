@@ -115,6 +115,16 @@ class Post(ModelExtension, models.Model):
     likes = models.ManyToManyField('User', related_name='liked_posts')
 
     summary = field_label()
+    contextual = field_label()
+
+    def sanitize_context(self, user):
+        # make sure we cast request user to at least anonymous user
+        not_user = not isinstance(user, AbstractUser)
+        not_anon = not isinstance(user, AnonymousUser)
+        if not_user and not_anon:
+            user = AnonymousUser()
+
+        return user
 
     def has_read_permissions(self, field, value, context):
         """
@@ -171,6 +181,15 @@ class Post(ModelExtension, models.Model):
     @summary
     def like_count(self):
         return self.likes.count()
+
+    @property
+    @contextual
+    def i_like(self):
+
+        if self._context is None:
+            self.set_context(self.sanitize_context(None))
+
+        return self.likes.filter(id=self._context.id).exists()
 
     @classmethod
     def create_from_post(cls, user=None, content=None, **kwargs):
