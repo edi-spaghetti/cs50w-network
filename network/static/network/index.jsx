@@ -27,8 +27,8 @@ class Post extends React.Component {
 		this.state = {
 			isEditing: false,
 			content: props.data.content,
-			i_like: props.data.i_like,
-			like_count: props.data.like_count
+			iLike: props.data.i_like,
+			likeCount: props.data.like_count
 		}
 	}
 
@@ -106,13 +106,13 @@ class Post extends React.Component {
 		}]
 		var mode
 		var newLikeCount
-		if (this.state.i_like) {
+		if (this.state.iLike) {
 			mode = 'remove'
-			newLikeCount = this.state.like_count - 1
+			newLikeCount = this.state.likeCount - 1
 		}
 		else {
 			mode = 'add'
-			newLikeCount = this.state.like_count + 1
+			newLikeCount = this.state.likeCount + 1
 		}
 
 		return fetch('/api/v1/update', {
@@ -128,8 +128,8 @@ class Post extends React.Component {
 		.then(response => response.json())
 		.then((payload) => {
 			this.setState((state) => {
-				state.i_like = !state.i_like
-				state.like_count = newLikeCount
+				state.iLike = !state.iLike
+				state.likeCount = newLikeCount
 				// re-enable button once promise returns and state is set
 				btn.disabled = false
 				return state
@@ -199,7 +199,7 @@ class Post extends React.Component {
 				<div className="col-2">
 					<span className="icon_heart like-post-button" onClick={this.likePost}>
 						<div className="post-like-count">
-							{this.state.like_count}
+							{this.state.likeCount}
 						</div>
 					</span>
 					{editButton}
@@ -262,10 +262,10 @@ class Profile extends React.Component {
 	render() {
 		// TODO: redesign this widget
 
-		var follow_btn
+		var followBtn
 		if (this.props.data.can_follow) {
 			if (this.props.data.is_following) {
-				follow_btn = React.createElement(
+				followBtn = React.createElement(
 					'button', {
 						onClick: this.props.clickedFollowButton,
 						className: 'btn btn-primary'
@@ -273,7 +273,7 @@ class Profile extends React.Component {
 				)
 			}
 			else {
-				follow_btn = React.createElement(
+				followBtn = React.createElement(
 					'button', {
 						onClick: this.props.clickedFollowButton,
 						className: 'btn btn-outline-primary'
@@ -282,7 +282,7 @@ class Profile extends React.Component {
 			}
 		}
 		else if (this.props.data.is_self) {
-			follow_btn = React.createElement(
+			followBtn = React.createElement(
 					'button', {
 						onClick: (event) => {alert('Mmm. Oh Yeah!')},
 						className: 'btn btn-outline-danger'
@@ -292,7 +292,7 @@ class Profile extends React.Component {
 		else {
 			// if we can't follow and the profile is not the user's own
 			// profile we can assume this is an anonymous user
-			follow_btn = React.createElement(
+			followBtn = React.createElement(
 				'button', {
 					onClick: (event) => {window.location.href = '/login'},
 					className: 'btn btn-outline-info'
@@ -305,7 +305,7 @@ class Profile extends React.Component {
 				<h4>Profile: {this.props.data.username}</h4>
 				<h4>Followers: {this.props.data.follower_count}</h4>
 				<h4>Following: {this.props.data.leader_count}</h4>
-				{follow_btn}
+				{followBtn}
 	        </div>
 		)
 	}
@@ -460,7 +460,7 @@ class App extends React.Component {
 
 	// ----------------------------- STATE METHODS ----------------------------
 
-	insertNewPost = (new_post) => {
+	insertNewPost = (newPost) => {
 
 		// clear the new post form
 		document.querySelector('#new-post-content > textarea').value = ''
@@ -470,7 +470,7 @@ class App extends React.Component {
 			// TODO: insert by sorted index
 			//       currently sorting is hard coded to descending timestamp,
 			//       but if I add filters and sorting this will break.
-			state.inData.post.data = [new_post, ...state.inData.post.data]
+			state.inData.post.data = [newPost, ...state.inData.post.data]
 			// clear cached state value
 			state.outData.content = ''
 			return state
@@ -519,11 +519,11 @@ class App extends React.Component {
 			'user', [{leaders: ['id']}], filters, null, 1,
 		)
 		.then((payload) => {
-			var user_ids = payload.data.leaders.map(
+			var userIDs = payload.data.leaders.map(
 				leader => leader.id
 			)
 
-			filters = [{user: {in: user_ids}}]
+			filters = [{user: {in: userIDs}}]
 			this.search(
 				'post', true, filters, '-timestamp', null, 1,
 				{page: 'feed', setData: true}
