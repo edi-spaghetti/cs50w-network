@@ -112,6 +112,7 @@ class Post(ModelExtension, models.Model):
     )
     content = models.CharField(max_length=140)
     timestamp = models.DateTimeField(auto_now_add=True)
+    likes = models.ManyToManyField('User', related_name='liked_posts')
 
     summary = field_label()
 
@@ -186,77 +187,3 @@ class Post(ModelExtension, models.Model):
             return
 
         return cls(user=user, content=content)
-
-
-class Like(ModelExtension, models.Model):
-    user = models.ForeignKey(
-        'User', on_delete=models.CASCADE, related_name='likes'
-    )
-    post = models.ForeignKey(
-        'Post', on_delete=models.CASCADE, related_name='likes'
-    )
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def has_read_permissions(self, field, value, context):
-        """
-        TODO
-        :param field:
-        :param value:
-        :param context:
-        :return:
-        """
-        return True
-
-    def has_edit_permissions(self, field, value, context):
-        """
-        Authorises edit action on given field
-        :param field: Field to apply change
-        :param value: Value to apply to field
-        :param context: User requesting to make the change
-        :return: True if has permissions
-        :raises: PermissionError if not allowed
-        """
-        if isinstance(context, AnonymousUser):
-            raise PermissionError(
-                f'login required'
-            )
-        elif isinstance(context, AbstractUser) and not context.is_superuser:
-            # TODO
-            pass
-        else:
-            raise PermissionError(
-                f'invalid context, expected User - got {type(context)}'
-            )
-
-        return True
-
-    @property
-    def timestamp__serial(self):
-        return self.timestamp.strftime('%c')
-
-    @classmethod
-    def create_from_post(cls, user=None, post=None, **kwargs):
-        """
-        Creates a :class:`Like` instance from data provided in a POST request
-        :param user: user instance to link to the created like
-        :param post: Id of the post linked to created like
-        :param kwargs: Additional args for backwards compatibility
-        :return: A new, unsaved :class:`Like` instance
-        """
-
-        if user is None:
-            print(f'Must provide user')
-            return
-
-        try:
-            post = int(post)
-            post = Post.objects.get(pk=post)
-        except (ValueError, TypeError):
-            # TODO: logging
-            print(f'Cannot convert post to int - got {post}')
-            return
-        except Post.DoesNotExist:
-            print(f'No Post found with id: {post}')
-            return
-
-        return cls(user=user, post=post)

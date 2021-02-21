@@ -4,7 +4,7 @@ import pytz
 from django.test import TestCase
 from django.contrib.auth.models import AnonymousUser
 
-from .models import User, Post, Like
+from .models import User, Post
 
 
 class ModelTests(TestCase):
@@ -16,8 +16,6 @@ class ModelTests(TestCase):
         self.user2.save()
         self.post = Post.objects.create(user=self.user, content='Test Post')
         self.post.save()
-        self.like = Like.objects.create(user=self.user2, post=self.post)
-        self.like.save()
 
 
 class UserTests(ModelTests):
@@ -169,7 +167,7 @@ class UserTests(ModelTests):
                     'timestamp': 'Mon Feb  1 21:21:21 2021',
                     'content': 'Test Post',
                     'id': 1,
-                    'like_count': 1,
+                    'like_count': 0,
                     'username': 'test',
                     'user': {
                         'id': 1
