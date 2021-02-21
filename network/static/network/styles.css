@@ -12,7 +12,7 @@
 	font-style: normal;
 }
 
-.icon_heart, .icon_pencil, .icon_floppy_alt {
+.icon_heart, .icon_pencil, .icon_floppy_alt, .icon_genius {
 	font-family: 'ElegantIcons';
 	font-size: 30px;
 }
@@ -29,6 +29,9 @@
 	content: "\e0e4";
 }
 
+.icon_genius:before {
+	content: "\e00a";
+}
 
 
 /* COLOURS *//*
@@ -65,6 +68,30 @@ body {
 
 .nav-link a {
 	text-decoration: none;
+}
+
+/* HOME */
+
+@keyframes explode {
+    0% {
+        font-size: 30px;
+        opacity: 1;
+    }
+    100% {
+        font-size: 400px;
+        opacity: 0;
+    }
+}
+
+.home-container {
+	width: 100%;
+	height: 400px;
+	text-align: center;
+	margin: auto;
+}
+
+.home-icon {
+	animation: explode 5s forwards;
 }
 
 /* POSTS */

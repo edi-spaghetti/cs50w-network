@@ -14,7 +14,7 @@ class NewPost extends React.Component {
 				    <textarea
 				        placeholder="Say something interesting"
 				        onChange={this.props.updateContent}
-				        maxlength="140"
+				        maxLength="140"
 			        ></textarea>
 				</div>
 				<div id="new-post-button" className="p-2 ml-auto">
@@ -316,6 +316,20 @@ class Profile extends React.Component {
 	}
 }
 
+class Home extends React.Component {
+
+	render() {
+
+		// TODO: redirect to all posts once animation is complete
+
+		return (
+			<div className="home-container">
+				<span className="home-icon icon_genius"></span>
+			</div>
+		)
+	}
+}
+
 class App extends React.Component {
 
 	constructor(props) {
@@ -599,7 +613,7 @@ class App extends React.Component {
 		var footer
 		var data = [];  // init as empty array so concat below doesn't fail
 		if (this.state.page === 'home') {
-			// TODO: pageComponent = <Home />
+			pageComponent = <Home key="home-component"/>
 		}
 		else {
 
