@@ -111,6 +111,14 @@ class UserTests(ModelTests):
     def test_sorted_multi_linked_field(self):
         self.post2 = Post.objects.create(user=self.user, content='Test Post 2')
         self.post.save()
+        self.post.timestamp = datetime.datetime(
+            2021, 2, 1, 21, 21, 21, tzinfo=pytz.UTC
+        )
+        self.post.save()
+        self.post2.save()
+        self.post.timestamp = datetime.datetime(
+            2021, 2, 1, 21, 21, 22, tzinfo=pytz.UTC
+        )
         self.post2.save()
 
         # post #2 was created later, so reverse chronological should put
